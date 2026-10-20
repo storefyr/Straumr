@@ -1,6 +1,6 @@
 Name: harbour-straumr
 Summary: Straumr
-Version: 0.8.0
+Version: 0.9.0
 Release: 1
 Group: Qt/Qt
 URL: https://github.com/storefyr/Straumr
@@ -29,3 +29,4 @@ Files:
   - '%{_datadir}/%{name}'
   - '%{_datadir}/applications/%{name}.desktop'
   - '%{_datadir}/icons/hicolor/*/apps/%{name}.png'
+  - '%{_datadir}/lipstick/eventswidgets/%{name}.json'

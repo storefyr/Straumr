@@ -9,7 +9,7 @@ Name:       harbour-straumr
 # << macros
 
 Summary:    Straumr
-Version:    0.8.0
+Version:    0.9.0
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -53,6 +53,10 @@ rm -rf %{buildroot}
 # << install pre
 %qmake5_install
 
+# Installer Events View widget deskriptor
+mkdir -p %{buildroot}%{_datadir}/lipstick/eventswidgets
+cp eventswidgets/%{name}.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
+
 # >> install post
 # << install post
 
@@ -66,5 +70,6 @@ desktop-file-install --delete-original       \
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/lipstick/eventswidgets/%{name}.json
 # >> files
 # << files
