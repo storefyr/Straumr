@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 Item {
@@ -13,8 +12,9 @@ Item {
     property var tariffs: null
     property var currentPrice: null
     property real currentTotal: 0
-    property bool loading: true
-    property bool eventsViewVisible: typeof eventsViewVisible !== "undefined" ? eventsViewVisible : visible
+    property bool loading: false
+    property string errorMsg: ""
+    property bool eventsViewVisible: true
 
     readonly property string API_URL: "https://api.energidataservice.dk/dataset/DayAheadPrices"
     readonly property string PRICELIST_URL: "https://api.energidataservice.dk/dataset/DatahubPricelist"
@@ -137,14 +137,23 @@ Item {
     }
 
     function refresh() {
-        if (!visible) return
-        if (typeof eventsViewVisible !== "undefined" && !eventsViewVisible) return
+        console.log("[Straumr Widget] refresh() called")
         loading = true
+        errorMsg = ""
         httpGet(buildSpotUrl(), function(err, data) {
-            if (err || !data.records || data.records.length === 0) {
+            if (err) {
+                console.log("[Straumr Widget] Spot fetch error:", err.message)
+                errorMsg = "Fejl: " + err.message
                 loading = false
                 return
             }
+            if (!data.records || data.records.length === 0) {
+                console.log("[Straumr Widget] No records")
+                errorMsg = "Ingen data"
+                loading = false
+                return
+            }
+            console.log("[Straumr Widget] Got", data.records.length, "records")
             var split = splitPrices(data.records)
             todayPrices = split.today
             tomorrowPrices = split.tomorrow
@@ -167,9 +176,9 @@ Item {
                     currentTotal = calcTotal(currentPrice["DayAheadPriceDKK"], hour)
                 }
                 loading = false
-                todayPricesChanged()
-                tomorrowPricesChanged()
-                currentTotalChanged()
+                console.log("[Straumr Widget] Tariffs loaded, total:", currentTotal)
+                todayCanvas.requestPaint()
+                tomorrowCanvas.requestPaint()
             }
         }
 
@@ -192,16 +201,27 @@ Item {
     }
 
     onVisibleChanged: {
+        console.log("[Straumr Widget] visible changed:", visible)
         if (visible) refresh()
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        console.log("[Straumr Widget] Component.onCompleted, width:", width, "implicitHeight:", implicitHeight)
+        refresh()
+    }
 
     Timer {
         interval: 15 * 60 * 1000
         running: widget.visible
         repeat: true
         onTriggered: widget.refresh()
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.highlightBackgroundColor
+        opacity: 0.3
+        radius: Theme.paddingSmall
     }
 
     Column {
@@ -212,6 +232,7 @@ Item {
             top: parent.top
             leftMargin: Theme.horizontalPageMargin
             rightMargin: Theme.horizontalPageMargin
+            topMargin: Theme.paddingMedium
         }
         spacing: Theme.paddingSmall
 
@@ -241,9 +262,12 @@ Item {
 
             Label {
                 text: widget.loading ? qsTr("Henter\u2026")
+                    : widget.errorMsg !== "" ? widget.errorMsg
                     : widget.currentTotal > 0 ? formatKr(widget.currentTotal) + " kr/kWh"
-                    : ""
-                color: widget.loading ? Theme.secondaryColor : Theme.highlightColor
+                    : qsTr("Ingen data")
+                color: widget.errorMsg !== "" ? Theme.errorColor
+                    : widget.loading ? Theme.secondaryColor
+                    : Theme.highlightColor
                 font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
             }
@@ -252,14 +276,14 @@ Item {
         Label {
             visible: !widget.loading && widget.currentPrice !== null
             height: visible ? implicitHeight : 0
-            text: qsTr("Lige nu (") + widget.currentPrice["TimeDK"].substring(11, 16) + qsTr(") \u00b7 spot: ") +
-                  formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) + qsTr(" kr")
+            text: qsTr("Lige nu (") + (widget.currentPrice ? widget.currentPrice["TimeDK"].substring(11, 16) : "") + qsTr(") \u00b7 spot: ") +
+                  (widget.currentPrice ? formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) : "0") + qsTr(" kr")
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeSmall
         }
 
         Label {
-            text: qsTr("I dag")
+            text: qsTr("I dag (") + widget.todayPrices.length + qsTr(")")
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.todayPrices.length > 0
@@ -310,7 +334,7 @@ Item {
         }
 
         Label {
-            text: qsTr("I morgen")
+            text: qsTr("I morgen (") + widget.tomorrowPrices.length + qsTr(")")
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.tomorrowPrices.length > 0
