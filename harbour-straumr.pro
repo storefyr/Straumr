@@ -9,6 +9,8 @@ DISTFILES += qml/harbour-straumr.qml \
     qml/pages/MainPage.qml \
     qml/js/PriceFetcher.js \
     qml/components/PriceDisplay.qml \
+    qml/components/PriceList.qml \
+    qml/models/PriceModel.qml \
     rpm/harbour-straumr.spec \
     harbour-straumr.desktop
 
