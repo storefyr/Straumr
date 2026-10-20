@@ -40,6 +40,13 @@ Page {
                 text: qsTr("I dag (") + priceModel.priceArea + qsTr(") \u00b7 inkl. tariffer og moms")
             }
 
+            PriceGraph {
+                width: parent.width
+                height: 180
+                prices: priceModel.prices
+                tariffs: priceModel.tariffs
+            }
+
             PriceList {
                 width: parent.width
                 height: Math.min(contentHeight, page.height - column.y - footer.height - Theme.paddingLarge)
