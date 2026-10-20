@@ -1,0 +1,21 @@
+Name: harbour-straumr-widget
+Summary: Straumr Events View widget
+Version: 0.9.0
+Release: 1
+Group: Qt/Qt
+URL: https://github.com/storefyr/Straumr
+License: LICENSE
+Sources:
+- '%{name}-%{version}.tar.bz2'
+Description: |
+  Events View widget til Straumr. Registrerer Straumr widgetten
+  i Sailfish OS begivenhedsvisningen via Lipstick.
+  Kræver at hovedappen harbour-straumr er installeret.
+Configure: none
+Builder: none
+
+Requires:
+  - harbour-straumr >= 0.9.0
+
+Files:
+  - '%{_datadir}/lipstick/eventswidgets/harbour-straumr.json'

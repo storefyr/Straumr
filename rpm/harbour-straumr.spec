@@ -66,6 +66,5 @@ desktop-file-install --delete-original       \
 %{_datadir}/%{name}
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
-%{_datadir}/lipstick/eventswidgets/%{name}.json
 # >> files
 # << files

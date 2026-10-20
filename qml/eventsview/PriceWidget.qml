@@ -1,12 +1,11 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-Rectangle {
+Item {
     id: widget
 
-    color: "transparent"
-    height: contentColumn.height + 2 * Theme.paddingMedium
-    width: parent ? parent.width : 0
+    width: parent ? parent.width : Screen.width
+    implicitHeight: contentColumn.height + 2 * Theme.paddingMedium
 
     property var todayPrices: []
     property var tomorrowPrices: []
@@ -14,7 +13,7 @@ Rectangle {
     property var currentPrice: null
     property real currentTotal: 0
     property bool loading: true
-    property bool eventsViewVisible: true
+    property bool eventsViewVisible: typeof eventsViewVisible !== "undefined" ? eventsViewVisible : visible
 
     readonly property string API_URL: "https://api.energidataservice.dk/dataset/DayAheadPrices"
     readonly property string PRICELIST_URL: "https://api.energidataservice.dk/dataset/DatahubPricelist"
@@ -137,7 +136,8 @@ Rectangle {
     }
 
     function refresh() {
-        if (!eventsViewVisible) return
+        if (!visible) return
+        if (typeof eventsViewVisible !== "undefined" && !eventsViewVisible) return
         loading = true
         httpGet(buildSpotUrl(), function(err, data) {
             if (err || !data.records || data.records.length === 0) {
@@ -191,18 +191,14 @@ Rectangle {
     }
 
     onVisibleChanged: {
-        if (visible && eventsViewVisible) refresh()
-    }
-
-    onEventsViewVisibleChanged: {
-        if (eventsViewVisible) refresh()
+        if (visible) refresh()
     }
 
     Component.onCompleted: refresh()
 
     Timer {
         interval: 15 * 60 * 1000
-        running: widget.visible && widget.eventsViewVisible
+        running: widget.visible
         repeat: true
         onTriggered: widget.refresh()
     }
@@ -212,7 +208,7 @@ Rectangle {
         anchors {
             left: parent.left
             right: parent.right
-            verticalCenter: parent.verticalCenter
+            top: parent.top
             leftMargin: Theme.horizontalPageMargin
             rightMargin: Theme.horizontalPageMargin
         }
@@ -236,7 +232,11 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Item { width: 1; height: 1; Layout.fillWidth: true }
+            Item {
+                width: Theme.paddingLarge
+                height: 1
+                anchors.verticalCenter: parent.verticalCenter
+            }
 
             Label {
                 text: widget.loading ? qsTr("Henter\u2026")
@@ -250,6 +250,7 @@ Rectangle {
 
         Label {
             visible: !widget.loading && widget.currentPrice !== null
+            height: visible ? implicitHeight : 0
             text: qsTr("Lige nu (") + widget.currentPrice["TimeDK"].substring(11, 16) + qsTr(") \u00b7 spot: ") +
                   formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) + qsTr(" kr")
             color: Theme.secondaryColor
@@ -261,13 +262,14 @@ Rectangle {
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.todayPrices.length > 0
+            height: visible ? implicitHeight : 0
         }
 
         Canvas {
             id: todayCanvas
             visible: widget.todayPrices.length > 0
+            height: visible ? 60 : 0
             width: parent.width
-            height: 60
 
             onPaint: {
                 var ctx = getContext("2d")
@@ -311,13 +313,14 @@ Rectangle {
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.tomorrowPrices.length > 0
+            height: visible ? implicitHeight : 0
         }
 
         Canvas {
             id: tomorrowCanvas
             visible: widget.tomorrowPrices.length > 0
+            height: visible ? 60 : 0
             width: parent.width
-            height: 60
 
             onPaint: {
                 var ctx = getContext("2d")
