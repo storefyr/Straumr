@@ -4,3 +4,8 @@ X-Nemo-Application-Type=silica-qt5
 Icon=harbour-straumr
 Exec=harbour-straumr
 Name=Straumr
+
+[X-Sailjail]
+Permissions=Internet
+OrganizationName=io.github.storefyr
+ApplicationName=Straumr

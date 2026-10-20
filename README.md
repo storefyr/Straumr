@@ -4,6 +4,14 @@ En Sailfish OS-app der viser elpriser i begivenhedsvisningen (når man stryger t
 
 Dette er første babyskidt: app'en viser indtil videre kun "Hej verden".
 
+## SailJail (sandboxing)
+
+App'en kører i SailJail med følgende permission:
+- **Internet** — til at hente elpriser fra API'et
+
+Data gemmes i `~/.local/share/io.github.storefyr/Straumr/`, `~/.cache/...` og `~/.config/...`
+(sættes automatisk af libsailfishapp ud fra `[X-Sailjail]`-sektionen i .desktop-filen).
+
 ## Bygning
 
 Åbn `harbour-straumr.pro` i Sailfish SDK (Qt Creator), vælg et kit

@@ -37,12 +37,37 @@ jobs:
               print(f, 'OK')
           EOF
 
-      - name: Validate desktop file
+      - name: Validate desktop file (incl. SailJail)
         run: |
-          test -s harbour-straumr.desktop
-          grep -q '^Exec=harbour-straumr$' harbour-straumr.desktop
-          grep -q '^Icon=harbour-straumr$' harbour-straumr.desktop
-          echo 'desktop file OK'
+          python3 - <<'EOF'
+          import re
+          content = open('harbour-straumr.desktop').read()
+          assert re.search(r'^Exec=harbour-straumr$', content, re.M), 'Exec must be bare binary name'
+          assert re.search(r'^Icon=harbour-straumr$', content, re.M), 'missing Icon'
+          assert not re.search(r'^\[Sailjail\]$', content, re.M), '[Sailjail] not allowed, use [X-Sailjail]'
+          m = re.search(r'^\[X-Sailjail\]$(.*?)(?=^\[|\Z)', content, re.M | re.S)
+          assert m, 'missing [X-Sailjail] section'
+          keys = {}
+          for line in m.group(1).strip().split('\n'):
+              line = line.strip()
+              if line and not line.startswith('#'):
+                  k, _, v = line.partition('=')
+                  keys[k] = v
+          assert 'OrganizationName' in keys, 'missing OrganizationName'
+          assert 'ApplicationName' in keys, 'missing ApplicationName'
+          assert re.match(r'^[0-9a-z._-]+$', keys['OrganizationName']), 'bad OrganizationName'
+          assert re.match(r'^[A-Za-z_-][A-Z0-9a-z_-]*$', keys['ApplicationName']), 'bad ApplicationName'
+          allowed_perms = {'Audio','Bluetooth','Camera','Internet','Location','MediaIndexing',
+              'Microphone','NFC','RemovableMedia','UserDirs','WebView','Documents',
+              'Downloads','Music','Pictures','PublicDir','Videos','Compatibility',
+              'Secrets','Contacts','Accounts'}
+          if 'Permissions' in keys:
+              for p in keys['Permissions'].split(';'):
+                  p = p.strip()
+                  if p:
+                      assert p in allowed_perms, f'permission not allowed in Harbour: {p}'
+          print('desktop file OK (SailJail validated)')
+          EOF
 
       - name: Validate icons
         run: |
