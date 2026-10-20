@@ -6,29 +6,69 @@ import "../components"
 CoverBackground {
     id: cover
 
-    PriceDisplay {
+    Column {
         anchors {
             left: parent.left
             right: parent.right
-            verticalCenter: parent.verticalCenter
+            top: parent.top
+            bottom: footer.top
             margins: Theme.paddingMedium
         }
-        loading: priceModel.loading
-        hasError: priceModel.hasError
-        errorText: priceModel.errorMessage
-        priceDkkMwh: priceModel.currentPrice["DayAheadPriceDKK"] !== undefined ? priceModel.currentPrice["DayAheadPriceDKK"] : 0
-        totalPriceKwh: priceModel.currentTotalKwh
-        showTotal: true
-        timeLabel: {
-            if (!priceModel.currentPrice || priceModel.currentPrice["TimeDK"] === undefined)
-                return ""
-            var t = priceModel.currentPrice["TimeDK"]
-            return qsTr("Pris lige nu") + " (" + t.substring(11, 16) + ")"
+        spacing: Theme.paddingSmall
+
+        PriceDisplay {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width
+            loading: priceModel.loading
+            hasError: priceModel.hasError
+            errorText: priceModel.errorMessage
+            priceDkkMwh: priceModel.currentPrice["DayAheadPriceDKK"] !== undefined ? priceModel.currentPrice["DayAheadPriceDKK"] : 0
+            totalPriceKwh: priceModel.currentTotalKwh
+            showTotal: true
+            timeLabel: {
+                if (!priceModel.currentPrice || priceModel.currentPrice["TimeDK"] === undefined)
+                    return ""
+                var t = priceModel.currentPrice["TimeDK"]
+                return qsTr("Pris lige nu") + " (" + t.substring(11, 16) + ")"
+            }
+            fontSize: Theme.fontSizeExtraLarge
         }
-        fontSize: Theme.fontSizeHuge
+
+        Label {
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: Theme.secondaryColor
+            font.pixelSize: Theme.fontSizeExtraSmall
+            text: qsTr("I dag")
+        }
+
+        PriceGraph {
+            width: parent.width
+            height: cover.height * 0.25
+            prices: priceModel.todayPrices
+            tariffs: priceModel.tariffs
+            showNowLine: true
+        }
+
+        Label {
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: Theme.secondaryColor
+            font.pixelSize: Theme.fontSizeExtraSmall
+            text: qsTr("I morgen")
+            visible: priceModel.tomorrowPrices.length > 0
+        }
+
+        PriceGraph {
+            width: parent.width
+            height: cover.height * 0.25
+            prices: priceModel.tomorrowPrices
+            tariffs: priceModel.tariffs
+            showNowLine: false
+            visible: priceModel.tomorrowPrices.length > 0
+        }
     }
 
     Label {
+        id: footer
         anchors {
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
