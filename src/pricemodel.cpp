@@ -97,7 +97,8 @@ void PriceModel::refresh() {
     setHasError(false);
     setErrorMessage(QString());
 
-    QNetworkRequest spotReq(QUrl(buildSpotUrl()));
+    QUrl spotUrl(buildSpotUrl());
+    QNetworkRequest spotReq(spotUrl);
     spotReq.setRawHeader("Accept", "application/json");
     QNetworkReply *reply = m_nam.get(spotReq);
     connect(reply, &QNetworkReply::finished, this, &PriceModel::onSpotReply);
@@ -158,7 +159,8 @@ void PriceModel::fetchTariffs() {
     for (int i = 0; i < 4; i++) {
         QString url = buildTariffUrl(QString::fromUtf8(reqs[i].gln), QString::fromUtf8(reqs[i].note));
         qDebug() << "[Straumr] Henter tarif" << reqs[i].name << "fra" << reqs[i].gln;
-        QNetworkRequest tariffReq(QUrl(url));
+        QUrl tariffUrl(url);
+        QNetworkRequest tariffReq(tariffUrl);
         tariffReq.setRawHeader("Accept", "application/json");
         QNetworkReply *reply = m_nam.get(tariffReq);
         reply->setProperty("tariffIndex", i);
