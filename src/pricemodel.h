@@ -17,6 +17,8 @@ class PriceModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariantList prices READ prices NOTIFY pricesChanged)
+    Q_PROPERTY(QVariantList todayPrices READ todayPrices NOTIFY pricesChanged)
+    Q_PROPERTY(QVariantList tomorrowPrices READ tomorrowPrices NOTIFY pricesChanged)
     Q_PROPERTY(QVariantMap tariffs READ tariffs NOTIFY tariffsChanged)
     Q_PROPERTY(QVariantMap currentPrice READ currentPrice NOTIFY currentPriceChanged)
     Q_PROPERTY(qreal currentTotalKwh READ currentTotalKwh NOTIFY currentTotalKwhChanged)
@@ -30,6 +32,8 @@ public:
     explicit PriceModel(QObject *parent = nullptr);
 
     QVariantList prices() const { return m_prices; }
+    QVariantList todayPrices() const;
+    QVariantList tomorrowPrices() const;
     QVariantMap tariffs() const { return m_tariffs; }
     QVariantMap currentPrice() const { return m_currentPrice; }
     qreal currentTotalKwh() const { return m_currentTotalKwh; }

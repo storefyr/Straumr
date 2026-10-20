@@ -37,22 +37,29 @@ Page {
             }
 
             SectionHeader {
-                text: qsTr("I dag (") + priceModel.priceArea + qsTr(") \u00b7 inkl. tariffer og moms")
+                text: qsTr("I dag (") + priceModel.priceArea + qsTr(")")
             }
 
             PriceGraph {
                 width: parent.width
                 height: 180
-                prices: priceModel.prices
+                prices: priceModel.todayPrices
                 tariffs: priceModel.tariffs
+                showNowLine: true
             }
 
-            PriceList {
+            SectionHeader {
+                text: qsTr("I morgen (") + priceModel.priceArea + qsTr(")")
+                visible: priceModel.tomorrowPrices.length > 0
+            }
+
+            PriceGraph {
                 width: parent.width
-                height: Math.min(contentHeight, page.height - column.y - footer.height - Theme.paddingLarge)
-                prices: priceModel.prices
+                height: 180
+                prices: priceModel.tomorrowPrices
                 tariffs: priceModel.tariffs
-                interactive: false
+                showNowLine: false
+                visible: priceModel.tomorrowPrices.length > 0
             }
 
             Label {
@@ -65,6 +72,17 @@ Page {
                 text: priceModel.errorMessage !== ""
                     ? qsTr("Ingen prisdata: ") + priceModel.errorMessage
                     : qsTr("Ingen prisdata. Tjek din internetforbindelse.")
+            }
+
+            Label {
+                visible: !priceModel.loading && priceModel.tomorrowPrices.length === 0 && priceModel.prices.length > 0
+                x: Theme.horizontalPageMargin
+                width: parent.width - 2 * Theme.horizontalPageMargin
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                color: Theme.secondaryColor
+                font.pixelSize: Theme.fontSizeSmall
+                text: qsTr("Priser for i morgen offentligg\u00f8res typisk efter kl. 13")
             }
         }
 

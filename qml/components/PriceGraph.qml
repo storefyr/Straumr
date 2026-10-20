@@ -7,6 +7,7 @@ Item {
 
     property var prices: []
     property var tariffs: null
+    property bool showNowLine: true
     property real barWidth: 0
     property real graphPadding: Theme.paddingMedium
 
@@ -37,14 +38,20 @@ Item {
     }
 
     function currentIndex() {
+        if (prices.length === 0)
+            return -1
+        var firstDate = prices[0]["TimeDK"].substring(0, 10)
         var now = new Date()
+        var today = now.getFullYear() + "-" + PF.pad(now.getMonth() + 1) + "-" + PF.pad(now.getDate())
+        if (firstDate !== today)
+            return -1
         var nowISO = now.getFullYear() + "-" + PF.pad(now.getMonth() + 1) + "-" + PF.pad(now.getDate()) +
                      "T" + PF.pad(now.getHours()) + ":" + PF.pad(now.getMinutes()) + ":00"
         for (var i = 0; i < prices.length; i++) {
             if (prices[i]["TimeDK"] > nowISO)
                 return i
         }
-        return prices.length > 0 ? prices.length - 1 : 0
+        return prices.length - 1
     }
 
     SilicaFlickable {
@@ -91,8 +98,9 @@ Item {
                     }
                 }
 
+                if (root.showNowLine) {
                 var ci = root.currentIndex()
-                if (ci < n) {
+                if (ci >= 0 && ci < n) {
                     var cx = root.graphPadding + ci * bw + barW / 2
                     ctx.strokeStyle = Theme.highlightColor
                     ctx.lineWidth = 2
@@ -100,6 +108,7 @@ Item {
                     ctx.moveTo(cx, 0)
                     ctx.lineTo(cx, height)
                     ctx.stroke()
+                }
                 }
             }
         }

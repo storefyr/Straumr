@@ -241,6 +241,32 @@ void PriceModel::finishTariffs() {
     emit refreshed();
 }
 
+QVariantList PriceModel::todayPrices() const {
+    QDate today = QDate::currentDate();
+    QString todayStr = today.toString(QStringLiteral("yyyy-MM-dd"));
+    QVariantList result;
+    for (const auto &v : m_prices) {
+        QVariantMap rec = v.toMap();
+        QString timeDK = rec.value(QStringLiteral("TimeDK")).toString();
+        if (timeDK.left(10) == todayStr)
+            result.append(v);
+    }
+    return result;
+}
+
+QVariantList PriceModel::tomorrowPrices() const {
+    QDate tomorrow = QDate::currentDate().addDays(1);
+    QString tomorrowStr = tomorrow.toString(QStringLiteral("yyyy-MM-dd"));
+    QVariantList result;
+    for (const auto &v : m_prices) {
+        QVariantMap rec = v.toMap();
+        QString timeDK = rec.value(QStringLiteral("TimeDK")).toString();
+        if (timeDK.left(10) == tomorrowStr)
+            result.append(v);
+    }
+    return result;
+}
+
 qreal PriceModel::totalForRecord(const QVariantMap &record) const {
     if (record.isEmpty())
         return 0.0;
