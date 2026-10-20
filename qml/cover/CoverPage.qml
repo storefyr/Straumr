@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import QtQuick.LocalStorage 2.0
 import "../js/PriceFetcher.js" as PF
 import "../components"
 
@@ -12,12 +11,12 @@ CoverBackground {
 
     function refresh() {
         loading = true
-        PF.getCurrentPrice(function(err, price) {
+        PF.fetch(function(err, records) {
             loading = false
             if (err) {
                 currentPrice = null
             } else {
-                currentPrice = price
+                currentPrice = PF.findCurrentPrice(records, new Date())
             }
         })
     }
@@ -49,7 +48,7 @@ CoverBackground {
         }
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeExtraSmall
-        text: qsTr("Straumr · DK2")
+        text: qsTr("Straumr \u00b7 DK2")
     }
 
     Component.onCompleted: refresh()

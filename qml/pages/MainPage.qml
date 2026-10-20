@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import QtQuick.LocalStorage 2.0
 import "../js/PriceFetcher.js" as PF
 import "../components"
 
@@ -13,17 +12,11 @@ Page {
 
     function refresh() {
         loading = true
-        PF.getTodayPrices(function(err, records) {
+        PF.fetch(function(err, records) {
             loading = false
             if (!err && records) {
                 todayPrices = records
-                var nowISO = new Date().toISOString().slice(0, 16) + "00"
-                for (var i = 0; i < records.length; i++) {
-                    if (records[i].TimeDK <= nowISO)
-                        currentPrice = records[i]
-                    else
-                        break
-                }
+                currentPrice = PF.findCurrentPrice(records, new Date())
             }
         })
     }
@@ -51,7 +44,7 @@ Page {
                     if (!page.currentPrice)
                         return ""
                     var t = page.currentPrice.TimeDK
-                    return qsTr("Aktuel spotpris") + " · " + t.substring(11, 16)
+                    return qsTr("Aktuel spotpris") + " \u00b7 " + t.substring(11, 16)
                 }
             }
 
@@ -97,7 +90,7 @@ Page {
 
                         Label {
                             color: Theme.primaryColor
-                            text: PF.formatOre(modelData.DayAheadPriceDKK) + " øre"
+                            text: PF.formatOre(modelData.DayAheadPriceDKK) + " \u00f8re"
                         }
 
                         Label {
@@ -143,7 +136,7 @@ Page {
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeExtraSmall
         wrapMode: Text.WordWrap
-        text: qsTr("Spotpriser fra Energinet (energidataservice.dk) · ekskl. moms, afgifter og nettarif")
+        text: qsTr("Spotpriser fra Energinet (energidataservice.dk) \u00b7 ekskl. moms, afgifter og nettarif")
     }
 
     Component.onCompleted: refresh()
