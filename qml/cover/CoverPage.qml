@@ -7,20 +7,27 @@ CoverBackground {
     id: cover
 
     property var currentPrice: null
+    property var tariffs: null
+    property real totalPriceKwh: 0
     property bool loading: true
     property string errorMessage: ""
 
     function refresh() {
         loading = true
         errorMessage = ""
-        PF.fetch(function(err, records) {
+        PF.fetchAll(function(err, records, t) {
             loading = false
             if (err) {
                 console.warn("[Straumr] Cover fetch fejlede:", err.message)
                 currentPrice = null
                 errorMessage = err.message || "Ukendt fejl"
             } else {
+                tariffs = t
                 currentPrice = PF.findCurrentPrice(records, new Date())
+                if (currentPrice) {
+                    var hour = parseInt(currentPrice.TimeDK.substring(11, 13), 10)
+                    totalPriceKwh = PF.calculateTotalPriceKwh(currentPrice.DayAheadPriceDKK, tariffs, hour)
+                }
             }
         })
     }
@@ -36,6 +43,8 @@ CoverBackground {
         hasError: !cover.loading && cover.currentPrice === null
         errorText: cover.errorMessage
         priceDkkMwh: cover.currentPrice ? cover.currentPrice.DayAheadPriceDKK : 0
+        totalPriceKwh: cover.totalPriceKwh
+        showTotal: true
         timeLabel: {
             if (!cover.currentPrice)
                 return ""
@@ -53,7 +62,7 @@ CoverBackground {
         }
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeExtraSmall
-        text: qsTr("Straumr \u00b7 DK2")
+        text: qsTr("Straumr \u00b7 DK2 \u00b7 ") + PF.GRID_NAME
     }
 
     Component.onCompleted: refresh()

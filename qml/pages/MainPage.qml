@@ -8,22 +8,31 @@ Page {
 
     property var currentPrice: null
     property var todayPrices: []
+    property var tariffs: null
     property bool loading: true
     property string errorMessage: ""
 
     function refresh() {
         loading = true
         errorMessage = ""
-        PF.fetch(function(err, records) {
+        PF.fetchAll(function(err, records, t) {
             loading = false
             if (err) {
                 console.warn("[Straumr] Page fetch fejlede:", err.message)
                 errorMessage = err.message || "Ukendt fejl"
             } else if (records) {
+                tariffs = t
                 todayPrices = records
                 currentPrice = PF.findCurrentPrice(records, new Date())
             }
         })
+    }
+
+    function totalForRecord(record) {
+        if (!record || !page.tariffs)
+            return 0
+        var hour = parseInt(record.TimeDK.substring(11, 13), 10)
+        return PF.calculateTotalPriceKwh(record.DayAheadPriceDKK, page.tariffs, hour)
     }
 
     SilicaFlickable {
@@ -46,16 +55,23 @@ Page {
                 hasError: !page.loading && page.currentPrice === null
                 errorText: page.errorMessage
                 priceDkkMwh: page.currentPrice ? page.currentPrice.DayAheadPriceDKK : 0
+                totalPriceKwh: {
+                    if (!page.currentPrice || !page.tariffs)
+                        return 0
+                    var hour = parseInt(page.currentPrice.TimeDK.substring(11, 13), 10)
+                    return PF.calculateTotalPriceKwh(page.currentPrice.DayAheadPriceDKK, page.tariffs, hour)
+                }
+                showTotal: true
                 timeLabel: {
                     if (!page.currentPrice)
                         return ""
                     var t = page.currentPrice.TimeDK
-                    return qsTr("Aktuel spotpris") + " \u00b7 " + t.substring(11, 16)
+                    return qsTr("Aktuel pris") + " \u00b7 " + t.substring(11, 16)
                 }
             }
 
             SectionHeader {
-                text: qsTr("I dag (DK2)")
+                text: qsTr("I dag (DK2) \u00b7 inkl. tariffer og moms")
             }
 
             Repeater {
@@ -63,6 +79,8 @@ Page {
                 delegate: BackgroundItem {
                     width: parent.width
                     height: Theme.itemSizeSmall
+
+                    property real totalKwh: page.totalForRecord(modelData)
 
                     Row {
                         anchors {
@@ -86,7 +104,7 @@ Page {
                             radius: width / 2
                             anchors.verticalCenter: parent.verticalCenter
                             color: {
-                                var lvl = PF.priceLevel(modelData.DayAheadPriceDKK)
+                                var lvl = PF.totalPriceLevel(parent.parent.totalKwh)
                                 if (lvl === 0) return "#4caf50"
                                 if (lvl === 1) return "#8bc34a"
                                 if (lvl === 2) return "#ff9800"
@@ -94,17 +112,20 @@ Page {
                             }
                         }
 
-                        Label {
-                            color: Theme.primaryColor
-                            text: PF.formatOre(modelData.DayAheadPriceDKK) + " \u00f8re"
-                        }
+                        Column {
+                            spacing: 2
 
-                        Label {
-                            width: parent.width - 60 - Theme.paddingMedium * 3 - Theme.paddingMedium
-                            horizontalAlignment: Text.AlignRight
-                            color: Theme.secondaryHighlightColor
-                            font.pixelSize: Theme.fontSizeSmall
-                            text: PF.formatKr(modelData.DayAheadPriceDKK) + " kr/kWh"
+                            Label {
+                                color: Theme.primaryColor
+                                font.pixelSize: Theme.fontSizeSmall
+                                text: PF.formatTotalKr(parent.parent.totalKwh) + " kr"
+                            }
+
+                            Label {
+                                color: Theme.secondaryColor
+                                font.pixelSize: Theme.fontSizeExtraSmall
+                                text: qsTr("spot: ") + PF.formatKr(modelData.DayAheadPriceDKK) + " kr"
+                            }
                         }
                     }
                 }
@@ -144,7 +165,7 @@ Page {
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeExtraSmall
         wrapMode: Text.WordWrap
-        text: qsTr("Spotpriser fra Energinet (energidataservice.dk) \u00b7 ekskl. moms, afgifter og nettarif")
+        text: qsTr("Spotpriser fra Energinet \u00b7 Tariffer fra DatahubPricelist \u00b7 Netselskab: ") + PF.GRID_NAME + qsTr(" \u00b7 ekskl. elselskabstillæg")
     }
 
     Component.onCompleted: refresh()

@@ -9,7 +9,7 @@ Name:       harbour-straumr
 # << macros
 
 Summary:    Straumr
-Version:    0.3.3
+Version:    0.4.0
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -25,6 +25,8 @@ BuildRequires:  desktop-file-utils
 
 %description
 Straumr - viser elpriser i Sailfish OS begivenhedsvisningen.
+Viser den samlede elpris inkl. nettarif, Energinet-tariffer,
+elafgift og moms for Radius Elnet (DK2).
 
 
 %prep
