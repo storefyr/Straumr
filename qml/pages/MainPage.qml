@@ -29,10 +29,12 @@ Page {
     }
 
     function totalForRecord(record) {
-        if (!record || !page.tariffs)
+        var t = page.tariffs
+        var recs = page.todayPrices
+        if (!record || !t)
             return 0
         var hour = parseInt(record.TimeDK.substring(11, 13), 10)
-        return PF.calculateTotalPriceKwh(record.DayAheadPriceDKK, page.tariffs, hour)
+        return PF.calculateTotalPriceKwh(record.DayAheadPriceDKK, t, hour)
     }
 
     SilicaFlickable {
@@ -80,7 +82,10 @@ Page {
                     width: parent.width
                     height: Theme.itemSizeSmall
 
-                    property real totalKwh: page.totalForRecord(modelData)
+                    property real totalKwh: {
+                        var t = page.tariffs
+                        return page.totalForRecord(modelData)
+                    }
 
                     Row {
                         anchors {
@@ -104,7 +109,7 @@ Page {
                             radius: width / 2
                             anchors.verticalCenter: parent.verticalCenter
                             color: {
-                                var lvl = PF.totalPriceLevel(parent.parent.totalKwh)
+                                var lvl = PF.totalPriceLevel(parent.parent.parent.totalKwh)
                                 if (lvl === 0) return "#4caf50"
                                 if (lvl === 1) return "#8bc34a"
                                 if (lvl === 2) return "#ff9800"
@@ -118,7 +123,7 @@ Page {
                             Label {
                                 color: Theme.primaryColor
                                 font.pixelSize: Theme.fontSizeSmall
-                                text: PF.formatTotalKr(parent.parent.totalKwh) + " kr"
+                                text: PF.formatTotalKr(parent.parent.parent.totalKwh) + " kr"
                             }
 
                             Label {
