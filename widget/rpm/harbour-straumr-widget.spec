@@ -40,10 +40,9 @@ Kræver at hovedappen harbour-straumr er installeret.
 %install
 rm -rf %{buildroot}
 # >> install pre
-# << install pre
-
 mkdir -p %{buildroot}%{_datadir}/lipstick/eventswidgets
 cp eventswidgets/harbour-straumr.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
+# << install pre
 
 # >> install post
 # << install post
