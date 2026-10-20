@@ -1,11 +1,14 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 
-Item {
+Rectangle {
     id: widget
 
     width: parent ? parent.width : Screen.width
-    implicitHeight: contentColumn.height + 2 * Theme.paddingMedium
+    implicitHeight: Math.max(120, contentColumn.height + 2 * Theme.paddingMedium)
+    color: Theme.highlightBackgroundColor
+    opacity: 0.5
+    radius: Theme.paddingSmall
 
     property var todayPrices: []
     property var tomorrowPrices: []
@@ -13,8 +16,7 @@ Item {
     property var currentPrice: null
     property real currentTotal: 0
     property bool loading: false
-    property string errorMsg: ""
-    property bool eventsViewVisible: true
+    property string errorMsg: "OK"
 
     readonly property string API_URL: "https://api.energidataservice.dk/dataset/DayAheadPrices"
     readonly property string PRICELIST_URL: "https://api.energidataservice.dk/dataset/DatahubPricelist"
@@ -52,19 +54,23 @@ Item {
     }
 
     function httpGet(url, callback) {
-        var xhr = new XMLHttpRequest()
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== 4) return
-            if (xhr.status === 200) {
-                try { callback(null, JSON.parse(xhr.responseText)) }
-                catch (e) { callback(e, null) }
-            } else {
-                callback(new Error("HTTP " + xhr.status), null)
+        try {
+            var xhr = new XMLHttpRequest()
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4) return
+                if (xhr.status === 200) {
+                    try { callback(null, JSON.parse(xhr.responseText)) }
+                    catch (e) { callback(e, null) }
+                } else {
+                    callback(new Error("HTTP " + xhr.status), null)
+                }
             }
+            xhr.open("GET", url, true)
+            xhr.timeout = 15000
+            xhr.send()
+        } catch (e) {
+            callback(e, null)
         }
-        xhr.open("GET", url, true)
-        xhr.timeout = 15000
-        xhr.send()
     }
 
     function pickValidRecord(records, date) {
@@ -137,27 +143,24 @@ Item {
     }
 
     function refresh() {
-        console.log("[Straumr Widget] refresh() called")
         loading = true
-        errorMsg = ""
+        errorMsg = "Henter..."
         httpGet(buildSpotUrl(), function(err, data) {
             if (err) {
-                console.log("[Straumr Widget] Spot fetch error:", err.message)
                 errorMsg = "Fejl: " + err.message
                 loading = false
                 return
             }
-            if (!data.records || data.records.length === 0) {
-                console.log("[Straumr Widget] No records")
+            if (!data || !data.records || data.records.length === 0) {
                 errorMsg = "Ingen data"
                 loading = false
                 return
             }
-            console.log("[Straumr Widget] Got", data.records.length, "records")
             var split = splitPrices(data.records)
             todayPrices = split.today
             tomorrowPrices = split.tomorrow
             currentPrice = findCurrent(split.today)
+            errorMsg = "OK (" + split.today.length + " idag)"
             fetchTariffs()
         })
     }
@@ -176,52 +179,36 @@ Item {
                     currentTotal = calcTotal(currentPrice["DayAheadPriceDKK"], hour)
                 }
                 loading = false
-                console.log("[Straumr Widget] Tariffs loaded, total:", currentTotal)
                 todayCanvas.requestPaint()
                 tomorrowCanvas.requestPaint()
             }
         }
 
         httpGet(buildTariffUrl(ENERGINET_GLN, "Systemtarif"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.systemtarif = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.systemtarif = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(ENERGINET_GLN, "Transmissions nettarif"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.transmission = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.transmission = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(ENERGINET_GLN, "Elafgift"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.elafgift = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.elafgift = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(GRID_GLN, "Nettarif C"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.nettarifC = r }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.nettarifC = r }
             checkDone()
         })
     }
 
-    onVisibleChanged: {
-        console.log("[Straumr Widget] visible changed:", visible)
-        if (visible) refresh()
-    }
-
-    Component.onCompleted: {
-        console.log("[Straumr Widget] Component.onCompleted, width:", width, "implicitHeight:", implicitHeight)
-        refresh()
-    }
+    Component.onCompleted: refresh()
 
     Timer {
         interval: 15 * 60 * 1000
         running: widget.visible
         repeat: true
         onTriggered: widget.refresh()
-    }
-
-    Rectangle {
-        anchors.fill: parent
-        color: Theme.highlightBackgroundColor
-        opacity: 0.3
-        radius: Theme.paddingSmall
     }
 
     Column {
@@ -241,14 +228,14 @@ Item {
             spacing: Theme.paddingMedium
 
             Label {
-                text: qsTr("Straumr")
+                text: "Straumr"
                 color: Theme.primaryColor
                 font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
             }
 
             Label {
-                text: qsTr("DK2 \u00b7 Radius Elnet")
+                text: "DK2"
                 color: Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.verticalCenter: parent.verticalCenter
@@ -261,29 +248,25 @@ Item {
             }
 
             Label {
-                text: widget.loading ? qsTr("Henter\u2026")
-                    : widget.errorMsg !== "" ? widget.errorMsg
+                text: widget.loading ? "..."
                     : widget.currentTotal > 0 ? formatKr(widget.currentTotal) + " kr/kWh"
-                    : qsTr("Ingen data")
-                color: widget.errorMsg !== "" ? Theme.errorColor
-                    : widget.loading ? Theme.secondaryColor
-                    : Theme.highlightColor
+                    : widget.errorMsg
+                color: widget.currentTotal > 0 ? Theme.highlightColor : Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
             }
         }
 
         Label {
-            visible: !widget.loading && widget.currentPrice !== null
+            visible: widget.currentPrice !== null
             height: visible ? implicitHeight : 0
-            text: qsTr("Lige nu (") + (widget.currentPrice ? widget.currentPrice["TimeDK"].substring(11, 16) : "") + qsTr(") \u00b7 spot: ") +
-                  (widget.currentPrice ? formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) : "0") + qsTr(" kr")
+            text: widget.currentPrice ? "Lige nu: " + formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) + " kr spot" : ""
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeSmall
         }
 
         Label {
-            text: qsTr("I dag (") + widget.todayPrices.length + qsTr(")")
+            text: "I dag: " + widget.todayPrices.length
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.todayPrices.length > 0
@@ -334,7 +317,7 @@ Item {
         }
 
         Label {
-            text: qsTr("I morgen (") + widget.tomorrowPrices.length + qsTr(")")
+            text: "I morgen: " + widget.tomorrowPrices.length
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.tomorrowPrices.length > 0
