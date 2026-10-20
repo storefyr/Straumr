@@ -15,6 +15,7 @@ Group:      Qt/Qt
 License:    LICENSE
 URL:        https://github.com/storefyr/Straumr
 Source0:    %{name}-%{version}.tar.bz2
+Source1:    %{name}-eventswidgets.tar.gz
 Source100:  harbour-straumr.yaml
 Requires:   sailfishsilica-qt5 >= 0.10.9
 BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
@@ -32,6 +33,7 @@ elafgift og moms for Radius Elnet (DK2).
 
 %prep
 %setup -q -n %{name}-%{version}
+%setup -q -T -D -a 1 -n %{name}-%{version}
 
 # >> setup
 # << setup
@@ -53,9 +55,9 @@ rm -rf %{buildroot}
 # << install pre
 %qmake5_install
 
-# Installer Events View widget deskriptor
+# Installer Events View widget deskriptor (fra Source1 tarball)
 mkdir -p %{buildroot}%{_datadir}/lipstick/eventswidgets
-cp eventswidgets/%{name}.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
+cp %{name}-eventswidgets/eventswidgets/%{name}.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
 
 # >> install post
 # << install post
