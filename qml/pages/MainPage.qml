@@ -28,15 +28,6 @@ Page {
         })
     }
 
-    function totalForRecord(record) {
-        var t = page.tariffs
-        var recs = page.todayPrices
-        if (!record || !t)
-            return 0
-        var hour = parseInt(record.TimeDK.substring(11, 13), 10)
-        return PF.calculateTotalPriceKwh(record.DayAheadPriceDKK, t, hour)
-    }
-
     SilicaFlickable {
         anchors.fill: parent
         contentHeight: column.height
@@ -79,12 +70,17 @@ Page {
             Repeater {
                 model: page.todayPrices
                 delegate: BackgroundItem {
+                    id: rowItem
                     width: parent.width
                     height: Theme.itemSizeSmall
 
+                    property real spotDkkMwh: modelData.DayAheadPriceDKK
+                    property int hour: parseInt(modelData.TimeDK.substring(11, 13), 10)
+                    property var t: page.tariffs
+
                     property real totalKwh: {
-                        var t = page.tariffs
-                        return page.totalForRecord(modelData)
+                        if (!t) return 0
+                        return PF.calculateTotalPriceKwh(spotDkkMwh, t, hour)
                     }
 
                     Row {
@@ -109,7 +105,7 @@ Page {
                             radius: width / 2
                             anchors.verticalCenter: parent.verticalCenter
                             color: {
-                                var lvl = PF.totalPriceLevel(parent.parent.parent.totalKwh)
+                                var lvl = PF.totalPriceLevel(rowItem.totalKwh)
                                 if (lvl === 0) return "#4caf50"
                                 if (lvl === 1) return "#8bc34a"
                                 if (lvl === 2) return "#ff9800"
@@ -123,7 +119,7 @@ Page {
                             Label {
                                 color: Theme.primaryColor
                                 font.pixelSize: Theme.fontSizeSmall
-                                text: PF.formatTotalKr(parent.parent.parent.totalKwh) + " kr"
+                                text: PF.formatTotalKr(rowItem.totalKwh) + " kr"
                             }
 
                             Label {
