@@ -12,6 +12,7 @@ DISTFILES += qml/harbour-straumr.qml \
     qml/components/PriceDisplay.qml \
     qml/components/PriceGraph.qml \
     qml/eventsview/PriceWidget.qml \
+    qml/eventsview/PriceWidgetContent.qml \
     rpm/harbour-straumr.spec \
     harbour-straumr.desktop
 
