@@ -7,7 +7,6 @@ URL: https://github.com/storefyr/Straumr
 License: LICENSE
 Sources:
 - '%{name}-%{version}.tar.bz2'
-- '%{name}-eventswidgets.tar.gz'
 Description: |
   Straumr - viser elpriser i Sailfish OS begivenhedsvisningen.
   Viser den samlede elpris inkl. nettarif, Energinet-tariffer,
