@@ -14,14 +14,14 @@ function toLocalISO(date) {
 function startOfDayISO(date) {
     var d = new Date(date)
     d.setHours(0, 0, 0, 0)
-    return toLocalISO(d)
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
 }
 
 function endOfTomorrowISO(date) {
     var d = new Date(date)
     d.setDate(d.getDate() + 2)
     d.setHours(0, 0, 0, 0)
-    return toLocalISO(d)
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
 }
 
 function buildUrl() {
