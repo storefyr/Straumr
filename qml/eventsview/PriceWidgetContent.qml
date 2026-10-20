@@ -5,15 +5,15 @@ Item {
     id: widget
 
     width: parent ? parent.width : Screen.width
-    implicitHeight: contentColumn.height + 2 * Theme.paddingMedium
+    implicitHeight: Math.max(150, contentColumn.height + 2 * Theme.paddingMedium)
 
     property var todayPrices: []
     property var tomorrowPrices: []
     property var tariffs: null
     property var currentPrice: null
     property real currentTotal: 0
-    property bool loading: true
-    property bool eventsViewVisible: typeof eventsViewVisible !== "undefined" ? eventsViewVisible : visible
+    property bool loading: false
+    property string statusMsg: "Starter..."
 
     readonly property string API_URL: "https://api.energidataservice.dk/dataset/DayAheadPrices"
     readonly property string PRICELIST_URL: "https://api.energidataservice.dk/dataset/DatahubPricelist"
@@ -136,20 +136,31 @@ Item {
     }
 
     function refresh() {
-        if (!visible) return
-        if (typeof eventsViewVisible !== "undefined" && !eventsViewVisible) return
+        statusMsg = "Henter..."
         loading = true
-        httpGet(buildSpotUrl(), function(err, data) {
-            if (err || !data.records || data.records.length === 0) {
-                loading = false
-                return
-            }
-            var split = splitPrices(data.records)
-            todayPrices = split.today
-            tomorrowPrices = split.tomorrow
-            currentPrice = findCurrent(split.today)
-            fetchTariffs()
-        })
+        try {
+            httpGet(buildSpotUrl(), function(err, data) {
+                if (err) {
+                    statusMsg = "Fejl: " + err.message
+                    loading = false
+                    return
+                }
+                if (!data || !data.records || data.records.length === 0) {
+                    statusMsg = "Ingen data"
+                    loading = false
+                    return
+                }
+                var split = splitPrices(data.records)
+                todayPrices = split.today
+                tomorrowPrices = split.tomorrow
+                currentPrice = findCurrent(split.today)
+                statusMsg = "OK"
+                fetchTariffs()
+            })
+        } catch (e) {
+            statusMsg = "Exception: " + e.message
+            loading = false
+        }
     }
 
     function fetchTariffs() {
@@ -166,41 +177,46 @@ Item {
                     currentTotal = calcTotal(currentPrice["DayAheadPriceDKK"], hour)
                 }
                 loading = false
-                todayPricesChanged()
-                tomorrowPricesChanged()
-                currentTotalChanged()
+                todayCanvas.requestPaint()
+                tomorrowCanvas.requestPaint()
             }
         }
 
         httpGet(buildTariffUrl(ENERGINET_GLN, "Systemtarif"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.systemtarif = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.systemtarif = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(ENERGINET_GLN, "Transmissions nettarif"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.transmission = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.transmission = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(ENERGINET_GLN, "Elafgift"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.elafgift = r.Price1 }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.elafgift = r.Price1 }
             checkDone()
         })
         httpGet(buildTariffUrl(GRID_GLN, "Nettarif C"), function(e, d) {
-            if (!e && d.records) { var r = pickValidRecord(d.records, now); if (r) t.nettarifC = r }
+            if (!e && d && d.records) { var r = pickValidRecord(d.records, now); if (r) t.nettarifC = r }
             checkDone()
         })
     }
 
-    onVisibleChanged: {
-        if (visible) refresh()
+    Component.onCompleted: {
+        statusMsg = "Component klar"
+        refresh()
     }
-
-    Component.onCompleted: refresh()
 
     Timer {
         interval: 15 * 60 * 1000
-        running: widget.visible
+        running: true
         repeat: true
         onTriggered: widget.refresh()
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: Theme.highlightBackgroundColor
+        opacity: 0.4
+        radius: Theme.paddingSmall
     }
 
     Column {
@@ -211,6 +227,7 @@ Item {
             top: parent.top
             leftMargin: Theme.horizontalPageMargin
             rightMargin: Theme.horizontalPageMargin
+            topMargin: Theme.paddingMedium
         }
         spacing: Theme.paddingSmall
 
@@ -219,14 +236,14 @@ Item {
             spacing: Theme.paddingMedium
 
             Label {
-                text: qsTr("Straumr")
+                text: "Straumr"
                 color: Theme.primaryColor
                 font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
             }
 
             Label {
-                text: qsTr("DK2 \u00b7 Radius Elnet")
+                text: "DK2"
                 color: Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeSmall
                 anchors.verticalCenter: parent.verticalCenter
@@ -239,26 +256,27 @@ Item {
             }
 
             Label {
-                text: widget.loading ? qsTr("Henter\u2026")
+                text: widget.loading ? "..."
                     : widget.currentTotal > 0 ? formatKr(widget.currentTotal) + " kr/kWh"
-                    : ""
-                color: widget.loading ? Theme.secondaryColor : Theme.highlightColor
+                    : widget.statusMsg
+                color: widget.currentTotal > 0 ? Theme.highlightColor
+                    : widget.statusMsg.indexOf("Fejl") >= 0 || widget.statusMsg.indexOf("Exception") >= 0 ? Theme.errorColor
+                    : Theme.secondaryColor
                 font.pixelSize: Theme.fontSizeLarge
                 font.bold: true
             }
         }
 
         Label {
-            visible: !widget.loading && widget.currentPrice !== null
+            visible: widget.currentPrice !== null && !widget.loading
             height: visible ? implicitHeight : 0
-            text: qsTr("Lige nu (") + widget.currentPrice["TimeDK"].substring(11, 16) + qsTr(") \u00b7 spot: ") +
-                  formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) + qsTr(" kr")
+            text: widget.currentPrice ? "Spot: " + formatKr(widget.currentPrice["DayAheadPriceDKK"] / 1000.0) + " kr" : ""
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeSmall
         }
 
         Label {
-            text: qsTr("I dag")
+            text: "I dag: " + widget.todayPrices.length
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.todayPrices.length > 0
@@ -309,7 +327,7 @@ Item {
         }
 
         Label {
-            text: qsTr("I morgen")
+            text: "I morgen: " + widget.tomorrowPrices.length
             color: Theme.secondaryColor
             font.pixelSize: Theme.fontSizeExtraSmall
             visible: widget.tomorrowPrices.length > 0

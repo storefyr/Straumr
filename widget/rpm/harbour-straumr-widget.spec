@@ -17,7 +17,7 @@ URL:        https://github.com/storefyr/Straumr
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  harbour-straumr-widget.yaml
 BuildArch:  noarch
-Requires:   harbour-straumr >= 0.9.9
+Requires:   harbour-straumr >= 0.9.10
 
 %description
 Events View widget til Straumr. Registrerer Straumr widgetten
