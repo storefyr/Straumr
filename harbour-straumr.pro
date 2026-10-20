@@ -18,6 +18,10 @@ DISTFILES += qml/harbour-straumr.qml \
 
 SAILFISHAPP_ICONS = 86x86 108x108 128x128 172x172
 
+eventswidgets.files = eventswidgets/harbour-straumr.json
+eventswidgets.path = /usr/share/lipstick/eventswidgets
+INSTALLS += eventswidgets
+
 HEADERS += src/pricemodel.h
 
 OTHER_FILES += README.md \

@@ -53,10 +53,6 @@ rm -rf %{buildroot}
 # << install pre
 %qmake5_install
 
-# Installer Events View widget deskriptor (fra hoved-tarball: qml/ og eventswidgets/ er med i tarball)
-mkdir -p %{buildroot}%{_datadir}/lipstick/eventswidgets
-cp eventswidgets/%{name}.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
-
 # >> install post
 # << install post
 
