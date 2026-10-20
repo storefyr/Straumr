@@ -74,6 +74,14 @@ private:
     QString buildTariffUrl(const QString &gln, const QString &note) const;
     QVariantMap pickValidRecord(const QJsonArray &records, const QDate &date) const;
 
+    static constexpr const char *PRICE_AREA = "DK2";
+    static constexpr const char *API_URL = "https://api.energidataservice.dk/dataset/DayAheadPrices";
+    static constexpr const char *PRICELIST_URL = "https://api.energidataservice.dk/dataset/DatahubPricelist";
+    static constexpr double VAT_RATE = 0.25;
+    static constexpr const char *GRID_GLN = "5790000705689";
+    static constexpr const char *GRID_NAME = "Radius Elnet";
+    static constexpr const char *ENERGINET_GLN = "5790000432752";
+
     QVariantList m_prices;
     QVariantMap m_tariffs;
     QVariantMap m_currentPrice;
@@ -83,14 +91,6 @@ private:
     QString m_errorMessage;
     QString m_gridName;
     QString m_priceArea;
-
-    static constexpr const char *PRICE_AREA = "DK2";
-    static constexpr const char *API_URL = "https://api.energidataservice.dk/dataset/DayAheadPrices";
-    static constexpr const char *PRICELIST_URL = "https://api.energidataservice.dk/dataset/DatahubPricelist";
-    static constexpr double VAT_RATE = 0.25;
-    static constexpr const char *GRID_GLN = "5790000705689";
-    static constexpr const char *GRID_NAME = "Radius Elnet";
-    static constexpr const char *ENERGINET_GLN = "5790000432752";
 
     QNetworkAccessManager m_nam;
     QList<QNetworkReply*> m_tariffReplies;
