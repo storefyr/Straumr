@@ -7,6 +7,19 @@ var GRID_GLN = "5790000705689"
 var GRID_NAME = "Radius Elnet"
 var ENERGINET_GLN = "5790000432752"
 
+var FALLBACK_NETTARIF_C = {
+    ValidFrom: "2026-10-01T00:00:00",
+    ValidTo: "2027-04-01T00:00:00",
+    Price1: 0.106175, Price2: 0.106175, Price3: 0.106175,
+    Price4: 0.106175, Price5: 0.106175, Price6: 0.106175,
+    Price7: 0.318524, Price8: 0.318524, Price9: 0.318524,
+    Price10: 0.318524, Price11: 0.318524, Price12: 0.318524,
+    Price13: 0.318524, Price14: 0.318524, Price15: 0.318524,
+    Price16: 0.318524, Price17: 0.318524,
+    Price18: 0.955573, Price19: 0.955573, Price20: 0.955573, Price21: 0.955573,
+    Price22: 0.318524, Price23: 0.318524, Price24: 0.318524
+}
+
 function pad(n) {
     return n < 10 ? "0" + n : "" + n
 }
@@ -44,7 +57,7 @@ function buildUrl() {
 function httpGet(url, callback) {
     if (typeof XMLHttpRequest === "undefined") {
         console.error("[Straumr] XMLHttpRequest er ikke defineret!")
-        callback(new Error("XMLHttpRequest ikke tilgængelig"), null)
+        callback(new Error("XMLHttpRequest ikke tilgaengelig"), null)
         return
     }
 
@@ -54,7 +67,7 @@ function httpGet(url, callback) {
             return
 
         if (xhr.status === 0) {
-            console.error("[Straumr] Ingen forbindelse (status 0) — tjek Internet-permission og netværk")
+            console.error("[Straumr] Ingen forbindelse (status 0) - tjek Internet-permission og netvaerk")
             callback(new Error("Ingen netforbindelse"), null)
             return
         }
@@ -78,7 +91,8 @@ function httpGet(url, callback) {
         callback(new Error("Timeout (15s)"), null)
     }
     xhr.onerror = function() {
-        console.error("[Straumr] Netværksfejl (onerror) — DNS, TLS eller forbindelse")
+        console.error("[Straumr] Netvaerksfejl (onerror) - DNS, TLS eller forbindelse")
+        callback(new Error("Netvaerksfejl"), null)
     }
     xhr.send()
 }
@@ -123,59 +137,76 @@ function pickValidRecord(records, date) {
     return records[0]
 }
 
+function fetchTariffSequential(tariffName, gln, note, now, cb) {
+    var url = buildTariffUrl(gln, note)
+    console.log("[Straumr] Henter tarif '" + tariffName + "' fra " + gln + " (" + note + ")")
+    httpGet(url, function(err, data) {
+        if (err) {
+            console.error("[Straumr] Tarif '" + tariffName + "' fejlede: " + err.message)
+            cb(null)
+            return
+        }
+        var count = data.records ? data.records.length : 0
+        console.log("[Straumr] Tarif '" + tariffName + "': " + count + " records")
+        if (count > 0) {
+            var r = pickValidRecord(data.records, now)
+            if (r) {
+                if (note === "Nettarif C") {
+                    console.log("[Straumr] Nettarif C: ValidFrom=" + r.ValidFrom +
+                                " ValidTo=" + r.ValidTo +
+                                " Price1=" + r.Price1 +
+                                " Price12=" + r.Price12 +
+                                " Price18=" + r.Price18)
+                } else {
+                    console.log("[Straumr] " + tariffName + ": ValidFrom=" + r.ValidFrom +
+                                " Price1=" + r.Price1)
+                }
+                cb(r)
+            } else {
+                console.warn("[Straumr] Tarif '" + tariffName + "': pickValidRecord returnerede null")
+                cb(null)
+            }
+        } else {
+            console.warn("[Straumr] Tarif '" + tariffName + "': ingen records i svaret")
+            cb(null)
+        }
+    })
+}
+
 function fetchTariffs(callback) {
     var tariffs = {
         systemtarif: null,
         transmission: null,
         elafgift: null,
-        nettarifC: null,
-        loaded: 0,
-        total: 4
+        nettarifC: null
     }
-
-    function done() {
-        tariffs.loaded++
-        if (tariffs.loaded === tariffs.total) {
-            console.log("[Straumr] Tariffer: system=" + tariffs.systemtarif +
-                        " transmission=" + tariffs.transmission +
-                        " elafgift=" + tariffs.elafgift +
-                        " nettarifC=" + (tariffs.nettarifC ? "ja" : "nej"))
-            callback(null, tariffs)
-        }
-    }
-
     var now = new Date()
 
-    httpGet(buildTariffUrl(ENERGINET_GLN, "Systemtarif"), function(err, data) {
-        if (!err && data.records) {
-            var r = pickValidRecord(data.records, now)
-            if (r) tariffs.systemtarif = r.Price1
-        }
-        done()
-    })
+    fetchTariffSequential("Systemtarif", ENERGINET_GLN, "Systemtarif", now, function(r1) {
+        if (r1) tariffs.systemtarif = r1.Price1
 
-    httpGet(buildTariffUrl(ENERGINET_GLN, "Transmissions nettarif"), function(err, data) {
-        if (!err && data.records) {
-            var r = pickValidRecord(data.records, now)
-            if (r) tariffs.transmission = r.Price1
-        }
-        done()
-    })
+        fetchTariffSequential("Transmissions nettarif", ENERGINET_GLN, "Transmissions nettarif", now, function(r2) {
+            if (r2) tariffs.transmission = r2.Price1
 
-    httpGet(buildTariffUrl(ENERGINET_GLN, "Elafgift"), function(err, data) {
-        if (!err && data.records) {
-            var r = pickValidRecord(data.records, now)
-            if (r) tariffs.elafgift = r.Price1
-        }
-        done()
-    })
+            fetchTariffSequential("Elafgift", ENERGINET_GLN, "Elafgift", now, function(r3) {
+                if (r3) tariffs.elafgift = r3.Price1
 
-    httpGet(buildTariffUrl(GRID_GLN, "Nettarif C"), function(err, data) {
-        if (!err && data.records) {
-            var r = pickValidRecord(data.records, now)
-            if (r) tariffs.nettarifC = r
-        }
-        done()
+                fetchTariffSequential("Nettarif C", GRID_GLN, "Nettarif C", now, function(r4) {
+                    if (r4) {
+                        tariffs.nettarifC = r4
+                    } else {
+                        console.warn("[Straumr] Nettarif C kunne ikke hentes - bruger fallback vaerdier (Radius vinter 2026)")
+                        tariffs.nettarifC = FALLBACK_NETTARIF_C
+                    }
+
+                    console.log("[Straumr] Tariffer klar: system=" + tariffs.systemtarif +
+                                " transmission=" + tariffs.transmission +
+                                " elafgift=" + tariffs.elafgift +
+                                " nettarifC=" + (tariffs.nettarifC ? "ja (P1=" + tariffs.nettarifC.Price1 + ")" : "nej"))
+                    callback(null, tariffs)
+                })
+            })
+        })
     })
 }
 
