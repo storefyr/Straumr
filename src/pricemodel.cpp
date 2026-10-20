@@ -14,8 +14,8 @@ static QString endOfTomorrowISO(const QDate &date) {
 
 PriceModel::PriceModel(QObject *parent)
     : QObject(parent)
-    , m_gridName(QStringLiteral(GRID_NAME))
-    , m_priceArea(QStringLiteral(PRICE_AREA))
+    , m_gridName(QString::fromUtf8(GRID_NAME))
+    , m_priceArea(QString::fromUtf8(PRICE_AREA))
 {
     m_autoRefresh.setInterval(15 * 60 * 1000);
     m_autoRefresh.setSingleShot(false);
