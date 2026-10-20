@@ -2,7 +2,20 @@
 
 En Sailfish OS-app der viser elpriser i begivenhedsvisningen (når man stryger til venstre).
 
-Dette er første babyskidt: app'en viser indtil videre kun "Hej verden".
+Straumr viser **elspotpriser for Øst Danmark (DK2)** — både på hovedsiden og i coveret når du stryger til venstre på hjemmeskærmen.
+
+## Datakilde
+
+Elpriser hentes fra [Energi Data Service](https://www.energidataservice.dk/) (Energinet), dataset `DayAheadPrices`, prisområde `DK2`. Data er underlagt [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — kilde: Energinet (www.energidataservice.dk).
+
+Priserne er **spotpriser** (DKK/MWh, vist som øre/kWh) og dækker **ikke** moms, elafgift eller nettarif.
+
+## Funktioner
+
+- **Cover** (venstre-stryg): viser aktuel spotpris med farveindikator (grøn/gul/rød)
+- **Hovedside**: aktuel pris + liste over dagens 15-minutters priser
+- **Offline cache**: priser gemmes lokalt i SQLite via `QtQuick.LocalStorage`, så app'en virker uden net (opdateres hver 15. minut)
+- **SailJail**: kører sandboxed med `Internet`-permission
 
 ## SailJail (sandboxing)
 

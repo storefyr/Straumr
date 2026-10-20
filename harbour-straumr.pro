@@ -7,6 +7,8 @@ SOURCES += src/harbour-straumr.cpp
 DISTFILES += qml/harbour-straumr.qml \
     qml/cover/CoverPage.qml \
     qml/pages/MainPage.qml \
+    qml/js/PriceFetcher.js \
+    qml/components/PriceDisplay.qml \
     rpm/harbour-straumr.spec \
     harbour-straumr.desktop
 
