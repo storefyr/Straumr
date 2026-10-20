@@ -81,6 +81,8 @@ private:
     bool m_loading = true;
     bool m_hasError = false;
     QString m_errorMessage;
+    QString m_gridName;
+    QString m_priceArea;
 
     static constexpr const char *PRICE_AREA = "DK2";
     static constexpr const char *API_URL = "https://api.energidataservice.dk/dataset/DayAheadPrices";
