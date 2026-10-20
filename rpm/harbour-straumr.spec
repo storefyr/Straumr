@@ -9,7 +9,7 @@ Name:       harbour-straumr
 # << macros
 
 Summary:    Straumr
-Version:    0.5.0
+Version:    0.5.1
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -21,6 +21,7 @@ BuildRequires:  pkgconfig(sailfishapp) >= 1.0.2
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5Quick)
+BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  desktop-file-utils
 
 %description

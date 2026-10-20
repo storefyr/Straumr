@@ -13,16 +13,16 @@ CoverBackground {
             verticalCenter: parent.verticalCenter
             margins: Theme.paddingMedium
         }
-        loading: app.priceModel.loading
-        hasError: app.priceModel.hasError
-        errorText: app.priceModel.errorMessage
-        priceDkkMwh: app.priceModel.currentPrice ? app.priceModel.currentPrice.DayAheadPriceDKK : 0
-        totalPriceKwh: app.priceModel.currentTotalKwh
+        loading: priceModel.loading
+        hasError: priceModel.hasError
+        errorText: priceModel.errorMessage
+        priceDkkMwh: priceModel.currentPrice["DayAheadPriceDKK"] !== undefined ? priceModel.currentPrice["DayAheadPriceDKK"] : 0
+        totalPriceKwh: priceModel.currentTotalKwh
         showTotal: true
         timeLabel: {
-            if (!app.priceModel.currentPrice)
+            if (!priceModel.currentPrice || priceModel.currentPrice["TimeDK"] === undefined)
                 return ""
-            var t = app.priceModel.currentPrice.TimeDK
+            var t = priceModel.currentPrice["TimeDK"]
             return qsTr("Pris lige nu") + " (" + t.substring(11, 16) + ")"
         }
         fontSize: Theme.fontSizeHuge
@@ -36,18 +36,18 @@ CoverBackground {
         }
         color: Theme.secondaryColor
         font.pixelSize: Theme.fontSizeExtraSmall
-        text: qsTr("Straumr \u00b7 ") + app.priceModel.priceArea + qsTr(" \u00b7 ") + app.priceModel.gridName
+        text: qsTr("Straumr \u00b7 ") + priceModel.priceArea + qsTr(" \u00b7 ") + priceModel.gridName
     }
 
     onStatusChanged: {
         if (status === Cover.Activating)
-            app.priceModel.refresh()
+            priceModel.refresh()
     }
 
     CoverActionList {
         CoverAction {
             iconSource: "image://theme/icon-cover-refresh"
-            onTriggered: app.priceModel.refresh()
+            onTriggered: priceModel.refresh()
         }
     }
 }

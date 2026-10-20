@@ -8,21 +8,14 @@ SilicaListView {
     property var prices: []
     property var tariffs: null
 
-    function totalForRecord(record) {
-        if (!record || !tariffs)
-            return 0
-        var hour = parseInt(record.TimeDK.substring(11, 13), 10)
-        return PF.calculateTotalPriceKwh(record.DayAheadPriceDKK, tariffs, hour)
-    }
-
     model: prices
     delegate: BackgroundItem {
         id: rowItem
         width: list.width
         height: Theme.itemSizeSmall
 
-        property real spotDkkMwh: modelData.DayAheadPriceDKK
-        property int hour: parseInt(modelData.TimeDK.substring(11, 13), 10)
+        property real spotDkkMwh: modelData["DayAheadPriceDKK"] !== undefined ? modelData["DayAheadPriceDKK"] : 0
+        property int hour: modelData["TimeDK"] !== undefined ? parseInt(modelData["TimeDK"].substring(11, 13), 10) : 0
         property var t: list.tariffs
 
         property real totalKwh: {
@@ -43,7 +36,7 @@ SilicaListView {
             Label {
                 width: 60
                 color: Theme.secondaryColor
-                text: modelData.TimeDK.substring(11, 16)
+                text: modelData["TimeDK"] !== undefined ? modelData["TimeDK"].substring(11, 16) : ""
             }
 
             Rectangle {
@@ -72,7 +65,7 @@ SilicaListView {
                 Label {
                     color: Theme.secondaryColor
                     font.pixelSize: Theme.fontSizeExtraSmall
-                    text: qsTr("spot: ") + PF.formatKr(modelData.DayAheadPriceDKK) + " kr"
+                    text: qsTr("spot: ") + PF.formatKr(modelData["DayAheadPriceDKK"] !== undefined ? modelData["DayAheadPriceDKK"] : 0) + " kr"
                 }
             }
         }
