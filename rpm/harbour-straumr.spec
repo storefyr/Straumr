@@ -9,7 +9,7 @@ Name:       harbour-straumr
 # << macros
 
 Summary:    Straumr
-Version:    0.9.4
+Version:    0.9.5
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
