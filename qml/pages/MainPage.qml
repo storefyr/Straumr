@@ -9,12 +9,17 @@ Page {
     property var currentPrice: null
     property var todayPrices: []
     property bool loading: true
+    property string errorMessage: ""
 
     function refresh() {
         loading = true
+        errorMessage = ""
         PF.fetch(function(err, records) {
             loading = false
-            if (!err && records) {
+            if (err) {
+                console.warn("[Straumr] Page fetch fejlede:", err.message)
+                errorMessage = err.message || "Ukendt fejl"
+            } else if (records) {
                 todayPrices = records
                 currentPrice = PF.findCurrentPrice(records, new Date())
             }
@@ -39,6 +44,7 @@ Page {
                 width: parent.width - 2 * Theme.horizontalPageMargin
                 loading: page.loading
                 hasError: !page.loading && page.currentPrice === null
+                errorText: page.errorMessage
                 priceDkkMwh: page.currentPrice ? page.currentPrice.DayAheadPriceDKK : 0
                 timeLabel: {
                     if (!page.currentPrice)
@@ -111,7 +117,9 @@ Page {
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 color: Theme.secondaryColor
-                text: qsTr("Ingen prisdata. Tjek din internetforbindelse.")
+                text: page.errorMessage !== ""
+                    ? qsTr("Ingen prisdata: ") + page.errorMessage
+                    : qsTr("Ingen prisdata. Tjek din internetforbindelse.")
             }
 
             VerticalScrollDecorator { }

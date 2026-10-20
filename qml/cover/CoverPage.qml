@@ -8,13 +8,17 @@ CoverBackground {
 
     property var currentPrice: null
     property bool loading: true
+    property string errorMessage: ""
 
     function refresh() {
         loading = true
+        errorMessage = ""
         PF.fetch(function(err, records) {
             loading = false
             if (err) {
+                console.warn("[Straumr] Cover fetch fejlede:", err.message)
                 currentPrice = null
+                errorMessage = err.message || "Ukendt fejl"
             } else {
                 currentPrice = PF.findCurrentPrice(records, new Date())
             }
@@ -30,6 +34,7 @@ CoverBackground {
         }
         loading: cover.loading
         hasError: !cover.loading && cover.currentPrice === null
+        errorText: cover.errorMessage
         priceDkkMwh: cover.currentPrice ? cover.currentPrice.DayAheadPriceDKK : 0
         timeLabel: {
             if (!cover.currentPrice)

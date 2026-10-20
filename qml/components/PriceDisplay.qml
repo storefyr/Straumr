@@ -9,6 +9,7 @@ Item {
     property string timeLabel: ""
     property bool loading: false
     property bool hasError: false
+    property string errorText: ""
     property int fontSize: Theme.fontSizeExtraLarge
 
     readonly property int level: PF.priceLevel(priceDkkMwh)
@@ -45,11 +46,21 @@ Item {
             font.pixelSize: root.fontSize
             text: {
                 if (root.loading)
-                    return qsTr("Henter priser…")
+                    return qsTr("Henter priser\u2026")
                 if (root.hasError)
                     return qsTr("Kunne ikke hente priser")
-                return PF.formatOre(root.priceDkkMwh) + " øre/kWh"
+                return PF.formatOre(root.priceDkkMwh) + " \u00f8re/kWh"
             }
+        }
+
+        Label {
+            visible: root.hasError && root.errorText !== ""
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            color: Theme.secondaryColor
+            font.pixelSize: Theme.fontSizeSmall
+            wrapMode: Text.WordWrap
+            text: root.errorText
         }
 
         Label {

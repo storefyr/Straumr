@@ -36,28 +36,59 @@ function buildUrl() {
 }
 
 function fetch(callback) {
+    var url = buildUrl()
+    console.log("[Straumr] fetch URL:", url)
+
+    if (typeof XMLHttpRequest === "undefined") {
+        console.error("[Straumr] XMLHttpRequest er ikke defineret!")
+        callback(new Error("XMLHttpRequest ikke tilgængelig"), null)
+        return
+    }
+
     var xhr = new XMLHttpRequest()
     xhr.onreadystatechange = function() {
         if (xhr.readyState !== XMLHttpRequest.DONE)
             return
+        console.log("[Straumr] HTTP status:", xhr.status, xhr.statusText)
+
+        if (xhr.status === 0) {
+            console.error("[Straumr] Ingen forbindelse (status 0) — tjek Internet-permission og netværk")
+            callback(new Error("Ingen netforbindelse"), null)
+            return
+        }
+
         if (xhr.status === 200) {
             try {
                 var data = JSON.parse(xhr.responseText)
-                if (data.records && data.records.length > 0) {
+                var count = data.records ? data.records.length : 0
+                console.log("[Straumr] Modtog", count, "records")
+                if (count > 0) {
                     callback(null, data.records)
                     return
                 }
+                console.warn("[Straumr] Svar uden records")
                 callback(new Error("Ingen priser i svaret"), null)
             } catch (e) {
-                callback(e, null)
+                console.error("[Straumr] JSON parse fejl:", e.message)
+                console.error("[Straumr] Response (500 tegn):", xhr.responseText.substring(0, 500))
+                callback(new Error("Ugyldigt svar fra server"), null)
             }
         } else {
+            console.error("[Straumr] HTTP fejl:", xhr.status, xhr.statusText)
+            console.error("[Straumr] Response (500 tegn):",
+                          xhr.responseText ? xhr.responseText.substring(0, 500) : "(tom)")
             callback(new Error("HTTP " + xhr.status), null)
         }
     }
-    xhr.open("GET", buildUrl(), true)
+    xhr.open("GET", url, true)
     xhr.timeout = 15000
-    xhr.ontimeout = function() { callback(new Error("Timeout"), null) }
+    xhr.ontimeout = function() {
+        console.error("[Straumr] Timeout efter 15 sekunder")
+        callback(new Error("Timeout (15s)"), null)
+    }
+    xhr.onerror = function() {
+        console.error("[Straumr] Netværksfejl (onerror) — DNS, TLS eller forbindelse")
+    }
     xhr.send()
 }
 
