@@ -25,9 +25,6 @@ PriceModel::PriceModel(QObject *parent)
     QTimer::singleShot(0, this, &PriceModel::refresh);
 }
 
-QString PriceModel::gridName() const { return m_gridName; }
-QString PriceModel::priceArea() const { return m_priceArea; }
-
 void PriceModel::setLoading(bool v) { if (m_loading != v) { m_loading = v; emit loadingChanged(); } }
 void PriceModel::setHasError(bool v) { if (m_hasError != v) { m_hasError = v; emit hasErrorChanged(); } }
 void PriceModel::setErrorMessage(const QString &v) { if (m_errorMessage != v) { m_errorMessage = v; emit errorMessageChanged(); } }
@@ -39,8 +36,8 @@ void PriceModel::setCurrentTotalKwh(qreal v) { if (!qFuzzyCompare(m_currentTotal
 QString PriceModel::buildSpotUrl() const {
     QDate today = QDate::currentDate();
     QJsonObject filter;
-    filter[QStringLiteral("PriceArea")] = QJsonArray{QStringLiteral(PRICE_AREA)};
-    QString url = QStringLiteral(API_URL);
+    filter[QStringLiteral("PriceArea")] = QJsonArray{QString::fromUtf8(PRICE_AREA)};
+    QString url = QString::fromUtf8(API_URL);
     url += QStringLiteral("?filter=") + QString::fromUtf8(QUrl::toPercentEncoding(QString::fromUtf8(QJsonDocument(filter).toJson(QJsonDocument::Compact))));
     url += QStringLiteral("&start=") + QString::fromUtf8(QUrl::toPercentEncoding(startOfDayISO(today)));
     url += QStringLiteral("&end=") + QString::fromUtf8(QUrl::toPercentEncoding(endOfTomorrowISO(today)));
@@ -54,7 +51,7 @@ QString PriceModel::buildTariffUrl(const QString &gln, const QString &note) cons
     QJsonObject filter;
     filter[QStringLiteral("GLN_Number")] = gln;
     filter[QStringLiteral("Note")] = note;
-    QString url = QStringLiteral(PRICELIST_URL);
+    QString url = QString::fromUtf8(PRICELIST_URL);
     url += QStringLiteral("?filter=") + QString::fromUtf8(QUrl::toPercentEncoding(QString::fromUtf8(QJsonDocument(filter).toJson(QJsonDocument::Compact))));
     url += QStringLiteral("&sort=") + QString::fromUtf8(QUrl::toPercentEncoding(QStringLiteral("ValidFrom desc")));
     url += QStringLiteral("&limit=10");
