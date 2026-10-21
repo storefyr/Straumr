@@ -1,6 +1,6 @@
 Name: harbour-straumr-widget
 Summary: Straumr Events View widget
-Version: 1.3.0
+Version: 1.4.0
 Release: 1
 Group: Qt/Qt
 URL: https://github.com/storefyr/Straumr
@@ -11,10 +11,12 @@ Description: |
   Selvstændig Events View widget til Straumr. Viser aktuel elpris
   for DK2 (Radius Elnet) direkte på Sailfish OS begivenhedsskærmen.
   Ingen afhængighed af hovedappen — installér og brug.
+
+  QML installeres under /usr/share/harbour-straumr/qml/eventsview/
+  fordi Lipstick kun kan loade widget-QML fra standard harbour-stier.
 Configure: none
 Builder: none
 
 Files:
   - '%{_datadir}/lipstick/eventswidgets/harbour-straumr.json'
-  - '%{_datadir}/%{name}/qml/eventsview/PriceWidget.qml'
-# PriceWidgetContent.qml removed for debug test
+  - '%{_datadir}/harbour-straumr/qml/eventsview/PriceWidget.qml'

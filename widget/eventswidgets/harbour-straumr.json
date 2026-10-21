@@ -3,8 +3,8 @@
         {
             "title": "Straumr",
             "order": 3,
-            "path": "/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml",
-            "available_path": "/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml",
+            "path": "/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml",
+            "available_path": "/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml",
             "default_enabled": true
         }
     ]

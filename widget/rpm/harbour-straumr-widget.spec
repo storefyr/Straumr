@@ -10,7 +10,7 @@ Name:       harbour-straumr-widget
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.3.0
+Version:    1.4.0
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -23,6 +23,9 @@ BuildArch:  noarch
 Selvstændig Events View widget til Straumr. Viser aktuel elpris
 for DK2 (Radius Elnet) direkte på Sailfish OS begivenhedsskærmen.
 Ingen afhængighed af hovedappen — installér og brug.
+
+QML installeres under /usr/share/harbour-straumr/qml/eventsview/
+fordi Lipstick kun kan loade widget-QML fra standard harbour-stier.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -43,9 +46,8 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_datadir}/lipstick/eventswidgets
 cp eventswidgets/harbour-straumr.json %{buildroot}%{_datadir}/lipstick/eventswidgets/
 
-mkdir -p %{buildroot}%{_datadir}/%{name}/qml/eventsview
-cp qml/eventsview/PriceWidget.qml %{buildroot}%{_datadir}/%{name}/qml/eventsview/
-# PriceWidgetContent.qml removed for debug test
+mkdir -p %{buildroot}%{_datadir}/harbour-straumr/qml/eventsview
+cp qml/eventsview/PriceWidget.qml %{buildroot}%{_datadir}/harbour-straumr/qml/eventsview/
 # << install pre
 
 # >> install post
@@ -54,14 +56,13 @@ cp qml/eventsview/PriceWidget.qml %{buildroot}%{_datadir}/%{name}/qml/eventsview
 %post
 USER=$(loginctl --no-legend list-sessions 2>/dev/null | grep -F seat0 | tr -s ' ' | cut -f 4 -d ' ')
 if [ -n "$USER" ]; then
-    su --login "$USER" --command='dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['"'"'/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml'"'"', '"'"'/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml'"'"']"' 2>/dev/null || true
+    su --login "$USER" --command='dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['"'"'/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml'"'"', '"'"'/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml'"'"']"' 2>/dev/null || true
 fi
 exit 0
 
 %files
 %defattr(-,root,root,-)
 %{_datadir}/lipstick/eventswidgets/harbour-straumr.json
-%{_datadir}/%{name}/qml/eventsview/PriceWidget.qml
-# PriceWidgetContent.qml removed for debug test
+%{_datadir}/harbour-straumr/qml/eventsview/PriceWidget.qml
 # >> files
 # << files
