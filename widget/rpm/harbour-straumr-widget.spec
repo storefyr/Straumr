@@ -6,10 +6,12 @@
 Name:       harbour-straumr-widget
 
 # >> macros
+%define __requires_exclude ^/usr/bin/gtk-update-icon-cache$
+%define __provides_exclude ^/usr/bin/gtk-update-icon-cache$
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.1
+Version:    1.2.2
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -17,8 +19,6 @@ URL:        https://github.com/storefyr/Straumr
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  harbour-straumr-widget.yaml
 BuildArch:  noarch
-AutoReq:    no
-AutoProv:   no
 
 %description
 Selvstændig Events View widget til Straumr. Viser aktuel elpris
