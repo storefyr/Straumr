@@ -183,34 +183,57 @@ Dette peger på et dybere problem — måske:
 - Sailfish OS 5.2.0.15 har ændret hvordan Events View widgets fungerer
 - Der mangler en eller anden registrering ud over JSON + dconf
 
-## Næste skridt (prioriteret)
+### H20: QML i Lipstick's egen mappe — AFKRÆFTET ❌
+- QML kopieret til `/usr/share/lipstick-jolla-home-qt5/eventsview/`
+- JSON opdateret til samme sti
+- dconf opdateret til samme sti
+- Lipstick genstartet
+- **Widget vises stadig ikke**
 
-1. **H19: QML indhold verificeret** — ✅ Loader wrapper korrekt
+### H21: Systemopdatering fundet! 🔴
+Screenshot viser: **"Opdatering til Finlayson 5.2.0.20 — 1 minut siden"**
+Telefonen er blevet opdateret fra **5.2.0.15 → 5.2.0.20**!
 
-2. **H20: Kopier QML til Lipstick's egen mappe** — system widgets ligger i
-   `/usr/share/lipstick-jolla-home-qt5/eventsview/`. Prøv at kopiere vores
-   QML-filer dertil og opdatere JSON + dconf:
-   ```
-   devel-su cp /usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml /usr/share/lipstick-jolla-home-qt5/eventsview/
-   ```
-   ```
-   devel-su cp /usr/share/harbour-straumr/qml/eventsview/PriceWidgetContent.qml /usr/share/lipstick-jolla-home-qt5/eventsview/
-   ```
-   Opdater JSON path til `/usr/share/lipstick-jolla-home-qt5/eventsview/PriceWidget.qml`
+Dette er sandsynligvis årsagen til at widgetten stoppede med at virke.
+Jolla har måske ændret hvordan Events View widgets fungerer i 5.2.0.20.
 
-3. **H21: Tjek om Sailfish OS er blevet opdateret**
+### H25: KALENDER-WIDGET VIRKER IKKE HELLER! 🔴🔴
+Screenshot af Events View viser KUN notifikationer (Påmindelser):
+- Sailfish OS (systemopdatering)
+- Sikkerhedskopi
+- System (screenshots)
+
+**Ingen kalender-widget. Ingen vejr-widget. Ingen widgets overhovedet!**
+
+Dette betyder: **Problemet er IKKE specifikt for Straumr.**
+**Alle Events View widgets er væk efter opdateringen til 5.2.0.20.**
+
+## NYE NÆSTE SKRIDT (prioriteret)
+
+1. **H26: Genaktiver system widgets** — gå til Indstillinger → Begivenhedsvisning
+   og slå Kalender og Vejr til igen. Måske blev de deaktiveret ved opdateringen.
+
+2. **H27: Verificer dconf efter opdatering** — måske har opdateringen nulstillet
+   `events_screen_widgets`:
    ```
-   rpm -qa | grep -E "lipstick|jolla-home"
+   dconf read /desktop/lipstick-jolla-home/events_screen_widgets
    ```
-   Sammenlign versionsnumre med hvad der var i går
 
-4. **H22: Prøv at downgrade/rollback** — hvis telefonen er blevet opdateret,
-   måske er der en inkompatibilitet med den nye version
+3. **H28: Søg efter Sailfish OS 5.2.0.20 changelog** — hvad er ændret i
+   Events View / Lipstick i denne version?
 
-5. **H23: Kontakt Sailfish OS community** — spørg hvordan tredjeparts
-   Events View widgets skal registreres i Sailfish OS 5.2.0.15
+4. **H29: Kontakt Jolla/Sailfish community** — "Events View widgets forsvandt
+   efter opdatering til 5.2.0.20"
 
-6. **H24: Alternativ tilgang — brug en anden widget-type**
+5. **H30: Vent på 5.2.0.21** — måske er det en bug der bliver fixet
+
+## Gamle næste skridt (stadig relevante hvis ovenstående ikke hjælper)
+
+6. **H22: Prøv at downgrade** — ikke praktisk på en produktionstelefon
+
+7. **H23: Kontakt Sailfish OS community**
+
+8. **H24: Alternativ tilgang — brug en anden widget-type**
    Måske compositor widgets eller cover widgets i stedet for Events View
 
 ## Scripts og værktøjer
