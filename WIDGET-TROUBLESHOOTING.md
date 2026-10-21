@@ -60,7 +60,7 @@ Begrundelse:
 | v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
 | v1.5.0 | H2 TEST: `Requires: harbour-straumr` tilføjet, QML på `/usr/share/harbour-straumr/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H2 AFKRÆFTET |
 | v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0`. Lipstick genstartet. Fuld reboot testet. | ❌ **Rød boks vises IKKE** — H6 OG H7 AFKRÆFTET |
-| v1.3.0/v1.7.0 | H10 TEST: **Nøjagtig kopi af v1.1.0** — Loader wrapper, fuld PriceWidgetContent (230 linjer), icon i JSON, ingen %post, ingen makroer. Kun versionsnumre forskellige. | ⏳ **TEST I GANG** (tagget 2026-10-21 ~19:00) |
+| v1.3.0/v1.7.0 | H10 TEST: **Nøjagtig kopi af v1.1.0** — Loader wrapper, fuld PriceWidgetContent (230 linjer), icon i JSON, ingen %post, ingen makroer. Kun versionsnumre forskellige. | ❌ **Widget vises IKKE** — H10 AFKRÆFTET |
 
 ## H1, H2 OG H6 AFKRÆFTET — Sti, Requires OG "hvem installerer QML" er IKKE problemet
 
@@ -139,34 +139,51 @@ Mulige årsager:
   `rpm -qip` output
 - **Status:** Ikke testet
 
-## KRITISK INDSIGT: v1.1.0 og v1.3.0/v1.6.0 er strukturelt identiske
+## ALLE KODE-HYPOTESER AFKRÆFTET: H1-H2-H6-H7-H10
 
-Sammenligning af filer mellem v1.1.0 (commit 1ced165) og v1.3.0/v1.6.0:
+v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur:
+- Samme Loader wrapper i PriceWidget.qml
+- Samme fuld PriceWidgetContent.qml (230 linjer)
+- Samme JSON med icon
+- Samme widget spec uden %post og uden makroer
+- Samme .pro med qml/eventsview/ i DISTFILES
+- Samme yaml struktur
 
-| Fil | v1.1.0 | v1.3.0/v1.6.0 | Forskel |
-|-----|--------|---------------|---------|
-| harbour-straumr.pro DISTFILES | Har qml/eventsview/ | Har qml/eventsview/ | ✅ Identisk |
-| harbour-straumr.pro OTHER_FILES | Kun README, spec, yaml | Har også widget/ refs | ⚠️ Minor |
-| qml/eventsview/PriceWidget.qml | Loader wrapper | **Rød boks Rectangle** | ❌ **FORSKELLIG** |
-| qml/eventsview/PriceWidgetContent.qml | 230 linjer fuld widget | 152 linjer (v1.0.4) | ❌ **FORSKELLIG** |
-| widget JSON | Har `icon` felt | **Mangler `icon`** | ❌ **FORSKELLIG** |
-| widget spec | Ingen %post, ingen makroer | Har %post + `_binaries_in_noarch...` | ❌ **FORSKELLIG** |
-| widget yaml Requires | `harbour-straumr >= 1.1.0` | `harbour-straumr >= 1.3.0` | Kun version |
+**Kun versionsnumrene er forskellige** (1.1.0 vs 1.3.0/1.7.0).
 
-**v1.7.0 retter alle forskelle** — nu 100% identisk med v1.1.0 bortset fra versionsnumre.
+**MEN: Widget vises stadig ikke.**
+
+Dette betyder: **Problemet er IKKE i koden.** Problemet er enten:
+1. **På enheden** — dconf tilstand, Lipstick cache, eller systemændring siden v1.1.0
+2. **I build-miljøet** — forskellige CI runners, forskellige SDK versioner
+3. **I installationsprocessen** — noget brugeren gør anderledes nu vs. dengang
 
 ## Næste skridt (prioriteret)
 
-1. **H10 TEST AKTIV (v1.7.0)** — nøjagtig kopi af v1.1.0. Hvis dette virker →
-   problemet var én af de små forskelle (rød boks vs Loader, manglende icon, %post)
-2. Hvis v1.7.0 IKKE virker → problemet er på enheden (dconf tilstand, systemændring)
-   eller i hvordan RPM'en bygges (forskellige build-miljøer)
-3. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`** — prøv at
-   installere widget-QML i samme mappe som systemets egne widgets
-4. **H9: Verificer dconf** — kør `dconf read /desktop/lipstick-jolla-home/events_screen_widgets`
-   og sammenlign med hvad v1.1.0 havde
-5. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
-   at registrere QML-stien for Lipstick uden at eje filerne
+1. **H11: Installer v1.1.0 RPM'er igen** — gå tilbage til præcis det der virkede.
+   Hvis v1.1.0 STADIG virker, så sammenlign hvad der er anderledes på enheden nu.
+   Hvis v1.1.0 IKKE længere virker → enheden er ændret (systemopdatering?).
+
+2. **H12: Verificer på enheden** — kør disse kommandoer og send output:
+   ```
+   ls -la /usr/share/harbour-straumr/qml/eventsview/
+   ```
+   ```
+   cat /usr/share/lipstick/eventswidgets/harbour-straumr.json
+   ```
+   ```
+   dconf read /desktop/lipstick-jolla-home/events_screen_widgets
+   ```
+   ```
+   rpm -qa | grep straumr
+   ```
+
+3. **H13: Sammenlign RPM-indhold byte-for-byte** — download v1.1.0 og v1.7.0
+   RPM'er, udpak dem, og sammenlign filerne med `diff`
+
+4. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`**
+
+5. **H9: Manuel dconf write** — sæt nøglen eksplicit efter installation
 
 ## Scripts og værktøjer
 
