@@ -10,76 +10,64 @@ så vi undgår at gentage fejlsøgning.
 | Widget RPM installerer uden fejl (v1.2.5+) | ✅ Virker |
 | RPM har ingen `gtk-update-icon-cache` afhængighed (v1.2.5+) | ✅ Virker |
 | JSON installeres på `/usr/share/lipstick/eventswidgets/harbour-straumr.json` | ✅ Virker |
-| QML-filer installeres på `/usr/share/harbour-straumr-widget/qml/eventsview/` | ✅ Virker |
-| Widget vises i Indstillinger → Begivenheder som "Straumr" | ✅ Virker (v1.2.5+) |
-| Widget har kontakt (toggle) i Indstillinger | ❓ Ukendt — skal testes med debug-version |
-| Widget vises på Events View (stryg til venstre) | ❌ Virker IKKE |
-| Samme widget-kode virker når den pakkes sammen med hovedappen (v1.1.0) | ✅ Virker |
-| Samme widget-kode som selvstændig RPM (v1.2.x) | ❌ Virker IKKE |
+| Widget vises i Indstillinger → Begivenheder som "Straumr" | ✅ Virker |
+| **Simpel widget (rød boks) VIRKER når QML ligger i hovedappen** | ✅ **BEKÆFTET** (v0.9.4, v0.9.8, v1.0.4, v1.1.0) |
+| Samme widget-kode som selvstændig RPM (QML i `/usr/share/harbour-straumr-widget/`) | ❌ Virker IKKE |
+| Widget vises på Events View med selvstændig RPM | ❌ Virker IKKE |
 
 ## Centrale forskelle: v1.1.0 (virker) vs v1.2.x (virker ikke)
 
 | Aspekt | v1.1.0 (virker) | v1.2.x (virker ikke) |
 |--------|-----------------|----------------------|
-| QML sti | `/usr/share/harbour-straumr/qml/eventsview/` | `/usr/share/harbour-straumr-widget/qml/eventsview/` |
-| QML i pakke | Hovedapp (harbour-straumr) | Separat widget-pakke (harbour-straumr-widget) |
-| JSON i pakke | Separat widget-pakke | Separat widget-pakke |
+| **QML sti** | `/usr/share/harbour-straumr/qml/eventsview/` | `/usr/share/harbour-straumr-widget/qml/eventsview/` |
+| **QML installeret af** | Hovedapp RPM (harbour-straumr) | Widget RPM (harbour-straumr-widget) |
 | Widget-pakke `Requires:` | `harbour-straumr >= 1.1.0` | Ingen |
-| `icon` i JSON | `/usr/share/icons/hicolor/86x86/apps/harbour-straumr.png` | Fjernet (v1.2.5+) |
-| `available_path` i JSON | `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml` | `/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml` |
-| QML importer | `import "../components"` etc. (relative til app) | Kun `import QtQuick` + `import Sailfish.Silica` |
+| JSON `path` | `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml` | `/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml` |
+| JSON `available_path` | `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml` | `/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml` |
 
-## Hypoteser (ikke bekræftet)
+## Hovedhypotese (H1) — MEST SANNSYNLIG
 
-### H1: Lipstick kan ikke læse QML uden for `/usr/share/harbour-straumr/`
-- **Begrundelse:** SailJail/sandbox kan begrænse Lipsticks adgang til QML-filer
-- **Test:** Debug-widget (v1.3.0) med simpel Rectangle
-- **Status:** Afventer test
+**Lipstick kan kun loade widget-QML fra `/usr/share/harbour-straumr/` (eller en sti
+registreret via libsailfishapp), ikke fra en vilkårlig `/usr/share/harbour-straumr-widget/`.**
 
-### H2: `events_screen_widgets` dconf nøglen overskriver ikke korrekt
-- **Begrundelse:** `%post` scriptlet kører måske ikke, eller Lipstick cacher værdien
-- **Test:** Manuel `dconf write` + genstart
-- **Status:** Testet manuelt — virker ikke
+Begrundelse:
+- libsailfishapp tilføjer automatisk `/usr/share/<HARBOUR_APP_NAME>` til QML import path
+- Lipstick kører i SailJail/sandbox — måske begrænset adgang til ikke-standard stier
+- Alle bekræftede succeser har haft QML under `/usr/share/harbour-straumr/`
 
-### H3: Widget QML fejler ved load (silent failure)
-- **Begrundelse:** QML syntax error, manglende import, eller runtime error
-- **Test:** Debug-widget uden kompleks logik
-- **Status:** Afventer test (v1.3.0)
+## Løsningsforslag (H1-løsning)
 
-### H4: `onlyUserConfigurable` eller anden model-filter skjuler widgetten
-- **Begrundelse:** EventsWidgetsModel i EventsViewList.qml bruger `onlyUserConfigurable: false`, men måske er der andre filtre
-- **Test:** Sammenligne med v1.1.0 hvor det virkede
-- **Status:** Ikke undersøgt
+**Widget RPM installerer QML til `/usr/share/harbour-straumr/qml/eventsview/` — uden at `Require:` hovedappen.**
+
+- Widget RPM er stadig selvstændig (kan installeres uden hovedappen)
+- QML ligger på den "standard" harbour-sti som Lipstick kan læse
+- Hvis hovedappen også installeres senere, vil der være fil-konflikt — men det kan løses med `%ghost` eller ved at hovedappen ikke længere installerer widget-QML
 
 ## Versionsoversigt
 
 | Version | Ændring | Resultat |
 |---------|---------|----------|
-| v1.1.0 | Widget som del af hovedapp + separat JSON-RPM | ✅ Virker |
-| v1.2.0 | Widget selvstændig RPM (JSON+QML+ikon) | ❌ gtk-update-icon-cache fejl |
-| v1.2.1 | AutoReq=no/AutoProv=no | ❌ Samme fejl |
-| v1.2.2 | `__requires_exclude` makro | ❌ Samme fejl |
-| v1.2.3 | `__scriptlet_requires() %{nil}` | ❌ Samme fejl |
-| v1.2.4 | `%global __os_install_post %{nil}` | ❌ Samme fejl |
+| v0.9.4 | DEBUG rød boks, QML i hovedapp | ✅ Virker |
+| v0.9.8 | DEBUG Loader→Item→Rectangle, QML i hovedapp | ✅ Virker |
+| v1.0.4 | Fuld widget, QML i hovedapp | ✅ Virker |
+| v1.1.0 | Widget RPM = JSON kun, `Requires: harbour-straumr`, QML i hovedapp | ✅ Virker |
+| v1.2.0 | Widget selvstændig RPM, QML i `/usr/share/harbour-straumr-widget/` | ❌ gtk-update-icon-cache fejl |
+| v1.2.1–v1.2.4 | Forsøg på at fjerne gtk-update-icon-cache afhængighed | ❌ Samme fejl |
 | v1.2.5 | Fjern ikon fra RPM | ✅ Installerer, ❌ widget vises ikke |
-| v1.2.6 | Fjern `available_path`, tilføj `%post` dconf write | ❌ Widget vises ikke, ❌ ingen toggle i Indstillinger |
-| v1.2.7 | Gendan `available_path` | ❌ Widget vises ikke (ikke testet endnu?) |
-| v1.3.0 | DEBUG: Simpel rød boks, ingen Loader/Content | ⏳ Afventer test |
+| v1.2.6 | Fjern `available_path`, tilføj `%post` dconf write | ❌ Widget vises ikke, ❌ ingen toggle |
+| v1.2.7 | Gendan `available_path` | ❌ Widget vises ikke |
+| v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet endnu |
 
 ## Næste skridt
 
-1. **Test v1.3.0** — hvis rød boks vises, er problemet i widget-QML'en
-2. **Hvis rød boks IKKE vises** — problemet er i RPM/JSON-strukturen:
-   - Tjek om Lipstick faktisk læser JSON'en (tilføj `translation_catalog` som system widgets)
-   - Tjek om QML-stien er sand
-   - Overvej at pakke QML under `/usr/share/harbour-straumr/` selvom det er en separat RPM
-3. **Sammenlign med et virkende eksempel** — f.eks. Sahkonseuranta eller Helmsman
+1. **Test v1.3.0** — hvis rød boks IKKE vises, bekræfter det H1 (sti-problemet)
+2. **Hvis H1 bekræftes:** Lav v1.4.0 hvor widget RPM installerer QML til `/usr/share/harbour-straumr/qml/eventsview/` (uden `Requires:` hovedappen)
+3. **Alternativ:** Accepter at widget kræver hovedappen (tilbage til v1.1.0 struktur)
 
 ## Kendte Sailfish OS detaljer
 
-- Lipstick kører som `defaultuser`, ikke root
+- libsailfishapp tilføjer `/usr/share/<HARBOUR_APP_NAME>` til QML import path automatisk
+- Lipstick kører som `defaultuser` i SailJail
 - Events View widgets loades via `Loader { active: model.enabled; source: model.path }`
 - `model.enabled` kommer fra dconf `events_screen_widgets`
 - `model.available` afhænger af `available_path` — filen skal eksistere
-- System widgets har `translation_catalog` og `translation_id` i JSON
-- Vores widget har kun `title` (plain text, ikke lokaliseret)
