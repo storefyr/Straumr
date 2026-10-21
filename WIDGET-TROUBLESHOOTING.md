@@ -139,51 +139,56 @@ Mulige årsager:
   `rpm -qip` output
 - **Status:** Ikke testet
 
-## ALLE KODE-HYPOTESER AFKRÆFTET: H1-H2-H6-H7-H10
+## ALLE HYPOTESER AFKRÆFTET: H1-H2-H6-H7-H10-H11
 
-v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur:
-- Samme Loader wrapper i PriceWidget.qml
-- Samme fuld PriceWidgetContent.qml (230 linjer)
-- Samme JSON med icon
-- Samme widget spec uden %post og uden makroer
-- Samme .pro med qml/eventsview/ i DISTFILES
-- Samme yaml struktur
+v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur.
 
-**Kun versionsnumrene er forskellige** (1.1.0 vs 1.3.0/1.7.0).
+**OG: v1.1.0 RPM'erne (dem der virkede i går) virker heller ikke længere!**
 
-**MEN: Widget vises stadig ikke.**
+### H11: v1.1.0 testet igen — AFKRÆFTET ❌
+- Samme RPM'er som virkede i går
+- Afinstalleret alt, geninstalleret v1.1.0
+- **Widget vises stadig ikke**
 
-Dette betyder: **Problemet er IKKE i koden.** Problemet er enten:
-1. **På enheden** — dconf tilstand, Lipstick cache, eller systemændring siden v1.1.0
-2. **I build-miljøet** — forskellige CI runners, forskellige SDK versioner
-3. **I installationsprocessen** — noget brugeren gør anderledes nu vs. dengang
+**Dette er afgørende: Problemet er på ENHEDEN, ikke i koden.**
+Noget er ændret på telefonen mellem "i går hvor det virkede" og "nu hvor intet virker".
 
 ## Næste skridt (prioriteret)
 
-1. **H11: Installer v1.1.0 RPM'er igen** — gå tilbage til præcis det der virkede.
-   Hvis v1.1.0 STADIG virker, så sammenlign hvad der er anderledes på enheden nu.
-   Hvis v1.1.0 IKKE længere virker → enheden er ændret (systemopdatering?).
+1. **H12: Verificer på enheden** — kør disse kommandoer én ad gangen:
 
-2. **H12: Verificer på enheden** — kør disse kommandoer og send output:
-   ```
-   ls -la /usr/share/harbour-straumr/qml/eventsview/
-   ```
-   ```
-   cat /usr/share/lipstick/eventswidgets/harbour-straumr.json
-   ```
-   ```
-   dconf read /desktop/lipstick-jolla-home/events_screen_widgets
-   ```
    ```
    rpm -qa | grep straumr
    ```
 
-3. **H13: Sammenlign RPM-indhold byte-for-byte** — download v1.1.0 og v1.7.0
-   RPM'er, udpak dem, og sammenlign filerne med `diff`
+   ```
+   ls -la /usr/share/harbour-straumr/qml/eventsview/
+   ```
 
-4. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`**
+   ```
+   cat /usr/share/lipstick/eventswidgets/harbour-straumr.json
+   ```
 
-5. **H9: Manuel dconf write** — sæt nøglen eksplicit efter installation
+   ```
+   dconf read /desktop/lipstick-jolla-home/events_screen_widgets
+   ```
+
+2. **H14: Tjek Indstillinger → Begivenhedsvisning**
+   - Er der en "Straumr" toggle? Er den slået til?
+
+3. **H15: Manuel dconf write**
+   ```
+   dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml', '/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml']"
+   ```
+
+4. **H16: Tjek for systemopdatering**
+   ```
+   rpm -qa | grep lipstick
+   ```
+
+5. **H17: Kør hovedappen** — åbner Straumr fra app-listen. Viser den priser?
+
+6. **H18: Virker kalender-widgetten stadig?** — hvis nej, er problemet Events View generelt
 
 ## Scripts og værktøjer
 
