@@ -59,6 +59,7 @@ Begrundelse:
 | v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
 | v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
 | v1.5.0 | H2 TEST: `Requires: harbour-straumr` tilføjet, QML på `/usr/share/harbour-straumr/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H2 AFKRÆFTET |
+| v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0` | ⏳ **TEST I GANG** |
 
 ## H1 OG H2 AFKRÆFTET — Sti OG Requires er IKKE problemet
 
@@ -106,12 +107,17 @@ anden RPM (selv med samme sti og Requires) virker det ikke.
   QML installeres af hovedapp-RPM. Widget-RPM har `Requires: harbour-straumr`.
 - **Konsekvens:** Widget kan ikke bruges uden hovedappen — men det er den
   eneste struktur der er bekræftet at virke
+- **Status:** ⏳ **TEST I GANG** (v1.3.0/v1.6.0, tagget 2026-10-21 16:43)
 
 ## Næste skridt (prioriteret)
 
-1. **H6: Gå tilbage til v1.1.0 struktur** — widget-RPM = kun JSON,
-   `Requires: harbour-straumr >= 1.2.0`. Hovedapp installerer QML.
-2. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
+1. **H6 TEST AKTIV** — brugeren skal installere begge RPM'er fra v1.3.0 release:
+   - `harbour-straumr-1.3.0-1.aarch64.rpm` (hovedapp — installerer QML)
+   - `harbour-straumr-widget-1.6.0-1.aarch64.rpm` (widget — kun JSON)
+   - Test om rød boks vises på Events View
+2. Hvis rød boks VISES → H6 BEKRÆFTET! Gendan fuld widget (Loader + PriceWidgetContent)
+3. Hvis rød boks IKKE vises → Sammenlign RPM-indhold mellem v1.1.0 og v1.3.0
+4. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
    at registrere QML-stien for Lipstick uden at eje filerne
 
 ## Kendte Sailfish OS detaljer
