@@ -9,7 +9,7 @@ Name:       harbour-straumr-widget
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.0
+Version:    1.2.1
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -17,6 +17,8 @@ URL:        https://github.com/storefyr/Straumr
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  harbour-straumr-widget.yaml
 BuildArch:  noarch
+AutoReq:    no
+AutoProv:   no
 
 %description
 Selvstændig Events View widget til Straumr. Viser aktuel elpris
