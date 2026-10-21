@@ -59,7 +59,8 @@ Begrundelse:
 | v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
 | v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
 | v1.5.0 | H2 TEST: `Requires: harbour-straumr` tilføjet, QML på `/usr/share/harbour-straumr/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H2 AFKRÆFTET |
-| v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0`. Lipstick genstartet. | ❌ **Rød boks vises IKKE** — H6 AFKRÆFTET |
+| v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0`. Lipstick genstartet. Fuld reboot testet. | ❌ **Rød boks vises IKKE** — H6 OG H7 AFKRÆFTET |
+| v1.3.0/v1.7.0 | H10 TEST: **Nøjagtig kopi af v1.1.0** — Loader wrapper, fuld PriceWidgetContent (230 linjer), icon i JSON, ingen %post, ingen makroer. Kun versionsnumre forskellige. | ⏳ **TEST I GANG** (tagget 2026-10-21 ~19:00) |
 
 ## H1, H2 OG H6 AFKRÆFTET — Sti, Requires OG "hvem installerer QML" er IKKE problemet
 
@@ -138,15 +139,32 @@ Mulige årsager:
   `rpm -qip` output
 - **Status:** Ikke testet
 
+## KRITISK INDSIGT: v1.1.0 og v1.3.0/v1.6.0 er strukturelt identiske
+
+Sammenligning af filer mellem v1.1.0 (commit 1ced165) og v1.3.0/v1.6.0:
+
+| Fil | v1.1.0 | v1.3.0/v1.6.0 | Forskel |
+|-----|--------|---------------|---------|
+| harbour-straumr.pro DISTFILES | Har qml/eventsview/ | Har qml/eventsview/ | ✅ Identisk |
+| harbour-straumr.pro OTHER_FILES | Kun README, spec, yaml | Har også widget/ refs | ⚠️ Minor |
+| qml/eventsview/PriceWidget.qml | Loader wrapper | **Rød boks Rectangle** | ❌ **FORSKELLIG** |
+| qml/eventsview/PriceWidgetContent.qml | 230 linjer fuld widget | 152 linjer (v1.0.4) | ❌ **FORSKELLIG** |
+| widget JSON | Har `icon` felt | **Mangler `icon`** | ❌ **FORSKELLIG** |
+| widget spec | Ingen %post, ingen makroer | Har %post + `_binaries_in_noarch...` | ❌ **FORSKELLIG** |
+| widget yaml Requires | `harbour-straumr >= 1.1.0` | `harbour-straumr >= 1.3.0` | Kun version |
+
+**v1.7.0 retter alle forskelle** — nu 100% identisk med v1.1.0 bortset fra versionsnumre.
+
 ## Næste skridt (prioriteret)
 
-1. **H7: Fuld reboot** — genstart telefonen helt (ikke kun Lipstick).
-   Vigtigst lige nu da alt andet er afkræftet.
-2. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`** — prøv at
+1. **H10 TEST AKTIV (v1.7.0)** — nøjagtig kopi af v1.1.0. Hvis dette virker →
+   problemet var én af de små forskelle (rød boks vs Loader, manglende icon, %post)
+2. Hvis v1.7.0 IKKE virker → problemet er på enheden (dconf tilstand, systemændring)
+   eller i hvordan RPM'en bygges (forskellige build-miljøer)
+3. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`** — prøv at
    installere widget-QML i samme mappe som systemets egne widgets
-3. **H9: Verificer dconf** — kør `dconf read /desktop/lipstick-jolla-home/events_screen_widgets`
+4. **H9: Verificer dconf** — kør `dconf read /desktop/lipstick-jolla-home/events_screen_widgets`
    og sammenlign med hvad v1.1.0 havde
-4. **H10: Sammenlign v1.1.0 vs v1.3.0 RPM'er** — `rpm -qlp` på begge
 5. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
    at registrere QML-stien for Lipstick uden at eje filerne
 
