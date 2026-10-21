@@ -5,7 +5,7 @@ Item {
     id: widget
 
     width: parent ? parent.width : Screen.width
-    implicitHeight: 280
+    implicitHeight: 300
 
     property var todayPrices: []
     property var tomorrowPrices: []
@@ -173,8 +173,6 @@ Item {
                 }
                 loading = false
                 statusMsg = "OK"
-                todayCanvas.requestPaint()
-                tomorrowCanvas.requestPaint()
             }
         }
 
@@ -213,7 +211,6 @@ Item {
     }
 
     Column {
-        id: contentColumn
         anchors {
             left: parent.left
             right: parent.right
@@ -358,10 +355,10 @@ Item {
         }
     }
 
-    onTodayPricesChanged: todayCanvas.requestPaint()
-    onTomorrowPricesChanged: tomorrowCanvas.requestPaint()
+    onTodayPricesChanged: if (todayCanvas) todayCanvas.requestPaint()
+    onTomorrowPricesChanged: if (tomorrowCanvas) tomorrowCanvas.requestPaint()
     onTariffsChanged: {
-        todayCanvas.requestPaint()
-        tomorrowCanvas.requestPaint()
+        if (todayCanvas) todayCanvas.requestPaint()
+        if (tomorrowCanvas) tomorrowCanvas.requestPaint()
     }
 }
