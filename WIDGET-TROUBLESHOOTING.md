@@ -157,7 +157,9 @@ v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur.
 | `rpm -qa \| grep straumr` | ✅ `harbour-straumr-1.1.0` + `harbour-straumr-widget-1.1.0` installeret |
 | `ls /usr/share/harbour-straumr/qml/eventsview/` | ✅ PriceWidget.qml (221 bytes) + PriceWidgetContent.qml (8704 bytes) findes |
 | `cat harbour-straumr.json` | ✅ Korrekt JSON med path, available_path, icon, default_enabled |
+| `cat PriceWidget.qml` | ✅ Korrekt Loader wrapper (ikke rød boks) |
 | Indstillinger → Begivenheder | ✅ Straumr vises med toggle, kan slås til |
+| Lipstick version | `lipstick-jolla-home-qt5-1.27.18-1.56.1.jolla.aarch64` |
 
 ### H15: Manuel dconf write — KØRT, MEN VIRKER IKKE ❌
 - **Før write:** dconf pegede på gammel sti `/usr/share/harbour-straumr-widget/...`
@@ -183,11 +185,7 @@ Dette peger på et dybere problem — måske:
 
 ## Næste skridt (prioriteret)
 
-1. **H19: Test om QML-filen kan læses af Lipstick** — kør:
-   ```
-   cat /usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml
-   ```
-   Virker indholdet korrekt? (Loader wrapper, ikke rød boks)
+1. **H19: QML indhold verificeret** — ✅ Loader wrapper korrekt
 
 2. **H20: Kopier QML til Lipstick's egen mappe** — system widgets ligger i
    `/usr/share/lipstick-jolla-home-qt5/eventsview/`. Prøv at kopiere vores
