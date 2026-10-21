@@ -10,7 +10,7 @@ Name:       harbour-straumr-widget
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.5
+Version:    1.2.6
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -50,6 +50,13 @@ cp qml/eventsview/PriceWidgetContent.qml %{buildroot}%{_datadir}/%{name}/qml/eve
 
 # >> install post
 # << install post
+
+%post
+USER=$(loginctl --no-legend list-sessions 2>/dev/null | grep -F seat0 | tr -s ' ' | cut -f 4 -d ' ')
+if [ -n "$USER" ]; then
+    su --login "$USER" --command='dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['"'"'/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml'"'"', '"'"'/usr/share/harbour-straumr-widget/qml/eventsview/PriceWidget.qml'"'"']"' 2>/dev/null || true
+fi
+exit 0
 
 %files
 %defattr(-,root,root,-)
