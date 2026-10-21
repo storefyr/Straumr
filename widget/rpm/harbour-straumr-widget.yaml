@@ -1,6 +1,6 @@
 Name: harbour-straumr-widget
 Summary: Straumr Events View widget
-Version: 1.0.2
+Version: 1.0.3
 Release: 1
 Group: Qt/Qt
 URL: https://github.com/storefyr/Straumr
@@ -15,7 +15,7 @@ Configure: none
 Builder: none
 
 Requires:
-  - harbour-straumr >= 1.0.2
+  - harbour-straumr >= 1.0.3
 
 Files:
   - '%{_datadir}/lipstick/eventswidgets/harbour-straumr.json'
