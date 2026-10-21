@@ -31,7 +31,7 @@ jobs:
         run: |
           python3 - <<'EOF'
           import glob
-          for f in glob.glob('qml/**/*.qml', recursive=True):
+          for f in glob.glob('qml/**/*.qml', recursive=True) + glob.glob('widget/qml/**/*.qml', recursive=True):
               text = open(f).read()
               assert text.count('{') == text.count('}'), f'unbalanced braces in {f}'
               print(f, 'OK')
