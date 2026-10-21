@@ -58,14 +58,20 @@ Begrundelse:
 | v1.2.7 | Gendan `available_path` | ❌ Widget vises ikke |
 | v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
 | v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
+| v1.5.0 | H2 TEST: `Requires: harbour-straumr` tilføjet, QML på `/usr/share/harbour-straumr/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H2 AFKRÆFTET |
 
-## H1 AFKRÆFTET — Stien er IKKE problemet
+## H1 OG H2 AFKRÆFTET — Sti OG Requires er IKKE problemet
 
-v1.4.0 installerede QML til `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml`
-— samme sti som v1.1.0 hvor det virkede. Alligevel vises widgetten ikke.
+v1.4.0: QML på `/usr/share/harbour-straumr/qml/eventsview/` uden Requires → ❌
+v1.5.0: QML på `/usr/share/harbour-straumr/qml/eventsview/` MED `Requires: harbour-straumr` → ❌
 
-**Konklusion:** Problemet er IKKE QML-stien. Noget andet ved den selvstændige
-widget-RPM forhindrer Lipstick i at vise widgetten.
+Dette er nu **identisk** med v1.1.0 strukturen (som virkede) bortset fra:
+- v1.1.0: Widget-RPM installerede KUN JSON. QML blev installeret af **hovedapp-RPM**.
+- v1.5.0: Widget-RPM installerer BÅDE JSON og QML.
+
+**Konklusion:** Problemet er at **widget-RPM installerer QML-filer**.
+Når QML installeres af hovedapp-RPM virker det. Når QML installeres af en
+anden RPM (selv med samme sti og Requires) virker det ikke.
 
 ## Nye hypoteser
 
@@ -74,6 +80,8 @@ widget-RPM forhindrer Lipstick i at vise widgetten.
   er installeret, eller måske er der en sikkerheds/sandbox-begrænsning
 - **Løsning:** Tilføj `Requires: harbour-straumr` til widget-RPM (tilbage til v1.1.0)
 - **Konsekvens:** Widget kan ikke installeres uden hovedappen — men det er måske OK
+- **Status:** ❌ **AFKRÆFTET** (v1.5.0) — rød boks vises stadig ikke selv med
+  `Requires: harbour-straumr` og hovedappen installeret
 
 ### H3: `%post` scriptlet kører ikke korrekt
 - **Begrundelse:** Måske kører `su --login` ikke, eller dconf write fejler stille
@@ -90,12 +98,21 @@ widget-RPM forhindrer Lipstick i at vise widgetten.
 - **Test:** Tilføj disse felter til JSON
 - **Status:** Ikke testet
 
+### H6: Widget-RPM må IKKE installere QML — kun hovedapp-RPM må gøre det
+- **Begrundelse:** En eller anden Sailfish OS mekanisme (måske Lipstick's
+  QML import path registrering, eller en file-watcher) knytter sig til
+  **hvilken RPM** der installerer filen, ikke bare stien
+- **Løsning:** Gå tilbage til v1.1.0 struktur: Widget-RPM installerer KUN JSON.
+  QML installeres af hovedapp-RPM. Widget-RPM har `Requires: harbour-straumr`.
+- **Konsekvens:** Widget kan ikke bruges uden hovedappen — men det er den
+  eneste struktur der er bekræftet at virke
+
 ## Næste skridt (prioriteret)
 
-1. **H2: Tilføj `Requires: harbour-straumr`** — gå tilbage til v1.1.0 struktur med
-   selvstændig widget-RPM der installerer JSON + QML, men kræver hovedappen
-2. **H5: Tilføj `translation_catalog`** til JSON hvis H2 ikke virker
-3. **H4: Test full reboot** efter installation
+1. **H6: Gå tilbage til v1.1.0 struktur** — widget-RPM = kun JSON,
+   `Requires: harbour-straumr >= 1.2.0`. Hovedapp installerer QML.
+2. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
+   at registrere QML-stien for Lipstick uden at eje filerne
 
 ## Kendte Sailfish OS detaljer
 
