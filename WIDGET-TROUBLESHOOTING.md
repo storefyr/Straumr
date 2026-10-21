@@ -139,7 +139,7 @@ Mulige årsager:
   `rpm -qip` output
 - **Status:** Ikke testet
 
-## ALLE HYPOTESER AFKRÆFTET: H1-H2-H6-H7-H10-H11
+## ALLE HYPOTESER AFKRÆFTET: H1-H2-H6-H7-H10-H11-H15
 
 v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur.
 
@@ -150,45 +150,70 @@ v1.7.0 er **100% identisk** med v1.1.0 i kode og struktur.
 - Afinstalleret alt, geninstalleret v1.1.0
 - **Widget vises stadig ikke**
 
-**Dette er afgørende: Problemet er på ENHEDEN, ikke i koden.**
-Noget er ændret på telefonen mellem "i går hvor det virkede" og "nu hvor intet virker".
+### VERIFICERING PÅ ENHED (alle ✅ korrekte):
+
+| Check | Resultat |
+|-------|----------|
+| `rpm -qa \| grep straumr` | ✅ `harbour-straumr-1.1.0` + `harbour-straumr-widget-1.1.0` installeret |
+| `ls /usr/share/harbour-straumr/qml/eventsview/` | ✅ PriceWidget.qml (221 bytes) + PriceWidgetContent.qml (8704 bytes) findes |
+| `cat harbour-straumr.json` | ✅ Korrekt JSON med path, available_path, icon, default_enabled |
+| Indstillinger → Begivenheder | ✅ Straumr vises med toggle, kan slås til |
+
+### H15: Manuel dconf write — KØRT, MEN VIRKER IKKE ❌
+- **Før write:** dconf pegede på gammel sti `/usr/share/harbour-straumr-widget/...`
+- **Efter write:** dconf peger korrekt på `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml`
+- **Resultat:** Widget vises **stadig ikke** efter dconf write + Lipstick restart
+
+### KRITISK KONKLUSION:
+**Alt er korrekt konfigureret på enheden:**
+- ✅ RPM'er installeret
+- ✅ QML-filer findes på korrekt sti
+- ✅ JSON korrekt
+- ✅ dconf peger på korrekt sti
+- ✅ Toggle i Indstillinger er slået til
+- ✅ Lipstick genstartet
+
+**MEN widget vises stadig ikke på Events View.**
+
+Dette peger på et dybere problem — måske:
+- Lipstick loader QML i en sandbox der ikke kan tilgå `/usr/share/harbour-straumr/`
+- Der er en QML-fejl der ikke vises nogen steder (ingen logs tilgængelige)
+- Sailfish OS 5.2.0.15 har ændret hvordan Events View widgets fungerer
+- Der mangler en eller anden registrering ud over JSON + dconf
 
 ## Næste skridt (prioriteret)
 
-1. **H12: Verificer på enheden** — kør disse kommandoer én ad gangen:
+1. **H19: Test om QML-filen kan læses af Lipstick** — kør:
+   ```
+   cat /usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml
+   ```
+   Virker indholdet korrekt? (Loader wrapper, ikke rød boks)
 
+2. **H20: Kopier QML til Lipstick's egen mappe** — system widgets ligger i
+   `/usr/share/lipstick-jolla-home-qt5/eventsview/`. Prøv at kopiere vores
+   QML-filer dertil og opdatere JSON + dconf:
    ```
-   rpm -qa | grep straumr
+   devel-su cp /usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml /usr/share/lipstick-jolla-home-qt5/eventsview/
    ```
+   ```
+   devel-su cp /usr/share/harbour-straumr/qml/eventsview/PriceWidgetContent.qml /usr/share/lipstick-jolla-home-qt5/eventsview/
+   ```
+   Opdater JSON path til `/usr/share/lipstick-jolla-home-qt5/eventsview/PriceWidget.qml`
 
+3. **H21: Tjek om Sailfish OS er blevet opdateret**
    ```
-   ls -la /usr/share/harbour-straumr/qml/eventsview/
+   rpm -qa | grep -E "lipstick|jolla-home"
    ```
+   Sammenlign versionsnumre med hvad der var i går
 
-   ```
-   cat /usr/share/lipstick/eventswidgets/harbour-straumr.json
-   ```
+4. **H22: Prøv at downgrade/rollback** — hvis telefonen er blevet opdateret,
+   måske er der en inkompatibilitet med den nye version
 
-   ```
-   dconf read /desktop/lipstick-jolla-home/events_screen_widgets
-   ```
+5. **H23: Kontakt Sailfish OS community** — spørg hvordan tredjeparts
+   Events View widgets skal registreres i Sailfish OS 5.2.0.15
 
-2. **H14: Tjek Indstillinger → Begivenhedsvisning**
-   - Er der en "Straumr" toggle? Er den slået til?
-
-3. **H15: Manuel dconf write**
-   ```
-   dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml', '/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml']"
-   ```
-
-4. **H16: Tjek for systemopdatering**
-   ```
-   rpm -qa | grep lipstick
-   ```
-
-5. **H17: Kør hovedappen** — åbner Straumr fra app-listen. Viser den priser?
-
-6. **H18: Virker kalender-widgetten stadig?** — hvis nej, er problemet Events View generelt
+6. **H24: Alternativ tilgang — brug en anden widget-type**
+   Måske compositor widgets eller cover widgets i stedet for Events View
 
 ## Scripts og værktøjer
 
