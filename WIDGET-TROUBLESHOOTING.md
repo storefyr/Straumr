@@ -59,20 +59,26 @@ Begrundelse:
 | v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
 | v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
 | v1.5.0 | H2 TEST: `Requires: harbour-straumr` tilføjet, QML på `/usr/share/harbour-straumr/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H2 AFKRÆFTET |
-| v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0` | ⏳ **TEST I GANG** |
+| v1.3.0/v1.6.0 | H6 TEST: Hovedapp installerer QML via libsailfishapp, widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0`. Lipstick genstartet. | ❌ **Rød boks vises IKKE** — H6 AFKRÆFTET |
 
-## H1 OG H2 AFKRÆFTET — Sti OG Requires er IKKE problemet
+## H1, H2 OG H6 AFKRÆFTET — Sti, Requires OG "hvem installerer QML" er IKKE problemet
 
 v1.4.0: QML på `/usr/share/harbour-straumr/qml/eventsview/` uden Requires → ❌
 v1.5.0: QML på `/usr/share/harbour-straumr/qml/eventsview/` MED `Requires: harbour-straumr` → ❌
+v1.3.0/v1.6.0: **Præcis v1.1.0 struktur** — hovedapp installerer QML via libsailfishapp,
+  widget-RPM = kun JSON, `Requires: harbour-straumr >= 1.3.0` → ❌ **Rød boks vises IKKE**
 
-Dette er nu **identisk** med v1.1.0 strukturen (som virkede) bortset fra:
-- v1.1.0: Widget-RPM installerede KUN JSON. QML blev installeret af **hovedapp-RPM**.
-- v1.5.0: Widget-RPM installerer BÅDE JSON og QML.
+**KRITISK KONKLUSION:** v1.3.0/v1.6.0 er **100% identisk** med v1.1.0 strukturen
+(som virkede!), men rød boks vises stadig ikke. Der er noget fundamentalt anderledes
+mellem "det der virkede i går" (v1.1.0) og "det der ikke virker i dag".
 
-**Konklusion:** Problemet er at **widget-RPM installerer QML-filer**.
-Når QML installeres af hovedapp-RPM virker det. Når QML installeres af en
-anden RPM (selv med samme sti og Requires) virker det ikke.
+Mulige årsager:
+- **Lipstick cache/dconf tilstand** på enheden er ændret siden v1.1.0
+- **Fuld reboot nødvendig** (ikke kun `systemctl --user restart lipstick`)
+- **System opdatering** på telefonen siden v1.1.0 test
+- **QML import path** ændret — måske skal der tilføjes noget til JSON
+- **SailJail rettigheder** — Lipstick kører sandboxed og QML-filen skal måske
+  ligge et specifikt sted ift. sandbox-konfigurationen
 
 ## Nye hypoteser
 
@@ -100,25 +106,60 @@ anden RPM (selv med samme sti og Requires) virker det ikke.
 - **Status:** Ikke testet
 
 ### H6: Widget-RPM må IKKE installere QML — kun hovedapp-RPM må gøre det
-- **Begrundelse:** En eller anden Sailfish OS mekanisme (måske Lipstick's
-  QML import path registrering, eller en file-watcher) knytter sig til
-  **hvilken RPM** der installerer filen, ikke bare stien
-- **Løsning:** Gå tilbage til v1.1.0 struktur: Widget-RPM installerer KUN JSON.
-  QML installeres af hovedapp-RPM. Widget-RPM har `Requires: harbour-straumr`.
-- **Konsekvens:** Widget kan ikke bruges uden hovedappen — men det er den
-  eneste struktur der er bekræftet at virke
-- **Status:** ⏳ **TEST I GANG** (v1.3.0/v1.6.0, tagget 2026-10-21 16:43)
+- **Status:** ❌ **AFKRÆFTET** (v1.3.0/v1.6.0) — præcis v1.1.0 struktur testet,
+  rød boks vises stadig ikke selv efter Lipstick genstart
+
+### H7: Fuld reboot af telefonen er nødvendig
+- **Begrundelse:** Måske cacher Lipstick widget-listen ved boot, ikke ved
+  `systemctl --user restart lipstick`. Eller dconf/systemd-tjenester skal
+  genindlæses ved fuld boot
+- **Løsning:** Genstart hele telefonen efter installation
+- **Status:** Ikke testet endnu
+
+### H8: Lipstick kører i SailJail og kan ikke læse `/usr/share/harbour-straumr/`
+- **Begrundelse:** Selvom stien er korrekt, kører Lipstick sandboxed.
+  Måske skal QML ligge i en sti der er eksplicit tilladt for Lipstick's sandbox
+- **Løsning:** Undersøg Lipstick's SailJail-konfiguration. System widgets ligger
+  i `/usr/share/lipstick-jolla-home-qt5/eventsview/` — måske skal vores widget
+  også ligge under `/usr/share/lipstick-jolla-home-qt5/`?
+- **Status:** Ikke testet
+
+### H9: dconf nøgle er ikke sat korrekt
+- **Begrundelse:** `events_screen_widgets` skal indeholde vores widget-sti.
+  Måske er der forskel på hvordan Lipstick læser den vs. hvad vi skriver
+- **Test:** `dconf read /desktop/lipstick-jolla-home/events_screen_widgets`
+  efter installation, og sammenlign med v1.1.0
+- **Status:** Ikke testet i denne session
+
+### H10: Sammenlign RPM-indhold mellem v1.1.0 og v1.3.0
+- **Begrundelse:** Måske er der en lille forskel i hvordan RPM'erne er bygget
+  (f.eks. fil-rettigheder, timestamps, eller en manglende fil)
+- **Løsning:** Download v1.1.0 RPM'er og sammenlign med `rpm -qlp` og
+  `rpm -qip` output
+- **Status:** Ikke testet
 
 ## Næste skridt (prioriteret)
 
-1. **H6 TEST AKTIV** — brugeren skal installere begge RPM'er fra v1.3.0 release:
-   - `harbour-straumr-1.3.0-1.aarch64.rpm` (hovedapp — installerer QML)
-   - `harbour-straumr-widget-1.6.0-1.aarch64.rpm` (widget — kun JSON)
-   - Test om rød boks vises på Events View
-2. Hvis rød boks VISES → H6 BEKRÆFTET! Gendan fuld widget (Loader + PriceWidgetContent)
-3. Hvis rød boks IKKE vises → Sammenlign RPM-indhold mellem v1.1.0 og v1.3.0
-4. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
+1. **H7: Fuld reboot** — genstart telefonen helt (ikke kun Lipstick).
+   Vigtigst lige nu da alt andet er afkræftet.
+2. **H8: QML under `/usr/share/lipstick-jolla-home-qt5/eventsview/`** — prøv at
+   installere widget-QML i samme mappe som systemets egne widgets
+3. **H9: Verificer dconf** — kør `dconf read /desktop/lipstick-jolla-home/events_screen_widgets`
+   og sammenlign med hvad v1.1.0 havde
+4. **H10: Sammenlign v1.1.0 vs v1.3.0 RPM'er** — `rpm -qlp` på begge
+5. Hvis brugeren insisterer på standalone: Undersøg om der findes en måde
    at registrere QML-stien for Lipstick uden at eje filerne
+
+## Scripts og værktøjer
+
+### install-v1.3.0.sh
+Kun til download — kører IKKE `devel-su` (hænger på kodeord).
+Bruger skal selv køre `pkcon install-local` bagefter.
+
+### Skoðja's update-script (reference)
+Håndterer kodeord ved at bruge Sailfish OS' indbyggede godkendelsesdialog
+("Bekræft med sikkerhedskode" / "Venter på godkendelse"). Dette er Sailfish's
+`pkcon` der viser en GUI-dialog — ikke noget scriptet selv gør.
 
 ## Kendte Sailfish OS detaljer
 
