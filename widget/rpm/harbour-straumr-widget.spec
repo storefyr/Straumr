@@ -10,7 +10,7 @@ Name:       harbour-straumr-widget
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.7
+Version:    1.3.0
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -45,7 +45,7 @@ cp eventswidgets/harbour-straumr.json %{buildroot}%{_datadir}/lipstick/eventswid
 
 mkdir -p %{buildroot}%{_datadir}/%{name}/qml/eventsview
 cp qml/eventsview/PriceWidget.qml %{buildroot}%{_datadir}/%{name}/qml/eventsview/
-cp qml/eventsview/PriceWidgetContent.qml %{buildroot}%{_datadir}/%{name}/qml/eventsview/
+# PriceWidgetContent.qml removed for debug test
 # << install pre
 
 # >> install post
@@ -62,6 +62,6 @@ exit 0
 %defattr(-,root,root,-)
 %{_datadir}/lipstick/eventswidgets/harbour-straumr.json
 %{_datadir}/%{name}/qml/eventsview/PriceWidget.qml
-%{_datadir}/%{name}/qml/eventsview/PriceWidgetContent.qml
+# PriceWidgetContent.qml removed for debug test
 # >> files
 # << files

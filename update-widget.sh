@@ -1,11 +1,11 @@
 #!/bin/sh
 # Straumr Widget update script - run on the Sailfish OS device
 # Usage: sh update-widget.sh [version]
-# Example: sh update-widget.sh 1.2.7
+# Example: sh update-widget.sh 1.3.0
 
 set -e
 
-VERSION="${1:-1.2.7}"
+VERSION="${1:-1.3.0}"
 ARCH="aarch64"
 RPM_NAME="harbour-straumr-widget-${VERSION}-1.${ARCH}.rpm"
 DOWNLOAD_URL="https://github.com/storefyr/Straumr/releases/download/v${VERSION}/${RPM_NAME}"
