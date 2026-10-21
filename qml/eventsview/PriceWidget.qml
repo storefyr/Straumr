@@ -1,16 +1,8 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
 
-Rectangle {
+Loader {
     width: parent ? parent.width : 0
-    height: 120
-    color: "red"
-
-    Text {
-        anchors.centerIn: parent
-        text: "STRAUMR DEBUG WIDGET"
-        color: "white"
-        font.pixelSize: Theme.fontSizeLarge
-        font.bold: true
-    }
+    height: Math.max(Theme.paddingLarge, item ? item.implicitHeight : 0)
+    source: Qt.resolvedUrl("PriceWidgetContent.qml")
 }

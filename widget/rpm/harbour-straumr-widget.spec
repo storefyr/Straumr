@@ -6,11 +6,10 @@
 Name:       harbour-straumr-widget
 
 # >> macros
-%global _binaries_in_noarch_packages_terminate_build 0
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.6.0
+Version:    1.7.0
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -21,9 +20,9 @@ BuildArch:  noarch
 Requires:   harbour-straumr >= 1.3.0
 
 %description
-Events View widget til Straumr. Viser aktuel elpris
-for DK2 (Radius Elnet) direkte på Sailfish OS begivenhedsskærmen.
-Kræver hovedappen harbour-straumr.
+Events View widget til Straumr. Registrerer Straumr widgetten
+i Sailfish OS begivenhedsvisningen via Lipstick.
+Kræver at hovedappen harbour-straumr er installeret.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -47,13 +46,6 @@ cp eventswidgets/harbour-straumr.json %{buildroot}%{_datadir}/lipstick/eventswid
 
 # >> install post
 # << install post
-
-%post
-USER=$(loginctl --no-legend list-sessions 2>/dev/null | grep -F seat0 | tr -s ' ' | cut -f 4 -d ' ')
-if [ -n "$USER" ]; then
-    su --login "$USER" --command='dconf write /desktop/lipstick-jolla-home/events_screen_widgets "['"'"'/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml'"'"', '"'"'/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml'"'"']"' 2>/dev/null || true
-fi
-exit 0
 
 %files
 %defattr(-,root,root,-)

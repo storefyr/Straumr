@@ -22,9 +22,4 @@ HEADERS += src/pricemodel.h
 
 OTHER_FILES += README.md \
     rpm/harbour-straumr.spec \
-    rpm/harbour-straumr.yaml \
-    widget/eventswidgets/harbour-straumr.json \
-    widget/qml/eventsview/PriceWidget.qml \
-    widget/qml/eventsview/PriceWidgetContent.qml \
-    widget/rpm/harbour-straumr-widget.spec \
-    widget/rpm/harbour-straumr-widget.yaml
+    rpm/harbour-straumr.yaml

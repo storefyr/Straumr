@@ -2,6 +2,7 @@
     "widgets": [
         {
             "title": "Straumr",
+            "icon": "/usr/share/icons/hicolor/86x86/apps/harbour-straumr.png",
             "order": 3,
             "path": "/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml",
             "available_path": "/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml",
