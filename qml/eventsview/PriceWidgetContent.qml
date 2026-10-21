@@ -5,7 +5,7 @@ Item {
     id: widget
 
     width: parent ? parent.width : Screen.width
-    implicitHeight: contentColumn.height + 2 * Theme.paddingMedium
+    implicitHeight: 280
 
     property var todayPrices: []
     property var tomorrowPrices: []
