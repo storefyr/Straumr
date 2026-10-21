@@ -6,12 +6,14 @@
 Name:       harbour-straumr-widget
 
 # >> macros
-%define __requires_exclude ^/usr/bin/gtk-update-icon-cache$
-%define __provides_exclude ^/usr/bin/gtk-update-icon-cache$
+%global __requires_exclude ^/usr/bin/gtk-update-icon-cache$
+%global __provides_exclude ^/usr/bin/gtk-update-icon-cache$
+%global _use_internal_dependency_generator 0
+%global __scriptlet_requires() %{nil}
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.2
+Version:    1.2.3
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
