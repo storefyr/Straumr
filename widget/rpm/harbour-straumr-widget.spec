@@ -10,7 +10,7 @@ Name:       harbour-straumr-widget
 # << macros
 
 Summary:    Straumr Events View widget
-Version:    1.2.6
+Version:    1.2.7
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
