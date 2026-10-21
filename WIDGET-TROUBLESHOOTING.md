@@ -56,13 +56,16 @@ Begrundelse:
 | v1.2.5 | Fjern ikon fra RPM | ✅ Installerer, ❌ widget vises ikke |
 | v1.2.6 | Fjern `available_path`, tilføj `%post` dconf write | ❌ Widget vises ikke, ❌ ingen toggle |
 | v1.2.7 | Gendan `available_path` | ❌ Widget vises ikke |
-| v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet endnu |
+| v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
+| v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ⏳ Afventer test |
 
 ## Næste skridt
 
-1. **Test v1.3.0** — hvis rød boks IKKE vises, bekræfter det H1 (sti-problemet)
-2. **Hvis H1 bekræftes:** Lav v1.4.0 hvor widget RPM installerer QML til `/usr/share/harbour-straumr/qml/eventsview/` (uden `Requires:` hovedappen)
-3. **Alternativ:** Accepter at widget kræver hovedappen (tilbage til v1.1.0 struktur)
+1. **Test v1.4.0** — rød boks med QML på standard harbour-sti:
+   - Hvis rød boks **VISES** → H1 bekræftet! Problemet er stien. Gå til v1.5.0 med fuld widget på samme sti
+   - Hvis rød boks **IKKE VISES** → H1 afkræftet. Problemet er noget andet (måske JSON struktur, %post scriptlet, eller Lipstick cache)
+2. **Hvis H1 afkræftes:** Overvej at widget-RPM skal `Requires: harbour-straumr` (tilbage til v1.1.0 struktur)
+3. **Alternativ:** Accepter at widget kræver hovedappen
 
 ## Kendte Sailfish OS detaljer
 
