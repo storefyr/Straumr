@@ -57,15 +57,45 @@ Begrundelse:
 | v1.2.6 | Fjern `available_path`, tilføj `%post` dconf write | ❌ Widget vises ikke, ❌ ingen toggle |
 | v1.2.7 | Gendan `available_path` | ❌ Widget vises ikke |
 | v1.3.0 | DEBUG simpel rød boks, QML stadig i `/usr/share/harbour-straumr-widget/` | ⏳ Ikke testet (oversprunget) |
-| v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ⏳ Afventer test |
+| v1.4.0 | H1 TEST: QML installeret til `/usr/share/harbour-straumr/qml/eventsview/`, stadig rød boks | ❌ **Rød boks vises IKKE** — H1 AFKRÆFTET |
 
-## Næste skridt
+## H1 AFKRÆFTET — Stien er IKKE problemet
 
-1. **Test v1.4.0** — rød boks med QML på standard harbour-sti:
-   - Hvis rød boks **VISES** → H1 bekræftet! Problemet er stien. Gå til v1.5.0 med fuld widget på samme sti
-   - Hvis rød boks **IKKE VISES** → H1 afkræftet. Problemet er noget andet (måske JSON struktur, %post scriptlet, eller Lipstick cache)
-2. **Hvis H1 afkræftes:** Overvej at widget-RPM skal `Requires: harbour-straumr` (tilbage til v1.1.0 struktur)
-3. **Alternativ:** Accepter at widget kræver hovedappen
+v1.4.0 installerede QML til `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml`
+— samme sti som v1.1.0 hvor det virkede. Alligevel vises widgetten ikke.
+
+**Konklusion:** Problemet er IKKE QML-stien. Noget andet ved den selvstændige
+widget-RPM forhindrer Lipstick i at vise widgetten.
+
+## Nye hypoteser
+
+### H2: `Requires: harbour-straumr` er nødvendig
+- **Begrundelse:** Måske tjekker EventsWidgetsModel om pakken der ejer QML-filen
+  er installeret, eller måske er der en sikkerheds/sandbox-begrænsning
+- **Løsning:** Tilføj `Requires: harbour-straumr` til widget-RPM (tilbage til v1.1.0)
+- **Konsekvens:** Widget kan ikke installeres uden hovedappen — men det er måske OK
+
+### H3: `%post` scriptlet kører ikke korrekt
+- **Begrundelse:** Måske kører `su --login` ikke, eller dconf write fejler stille
+- **Test:** Manuel `dconf write` efter installation
+- **Status:** Brugeren har allerede testet manuel dconf write — virkede ikke
+
+### H4: Lipstick cacher widget-listen og genlæser ikke
+- **Begrundelse:** Måske skal Lipstick genstartes på en bestemt måde
+- **Test:** `systemctl --user restart lipstick` (allerede gjort)
+- **Alternativ test:** Full reboot
+
+### H5: JSON struktur mangler noget
+- **Begrundelse:** System widgets har `translation_catalog` og `translation_id`
+- **Test:** Tilføj disse felter til JSON
+- **Status:** Ikke testet
+
+## Næste skridt (prioriteret)
+
+1. **H2: Tilføj `Requires: harbour-straumr`** — gå tilbage til v1.1.0 struktur med
+   selvstændig widget-RPM der installerer JSON + QML, men kræver hovedappen
+2. **H5: Tilføj `translation_catalog`** til JSON hvis H2 ikke virker
+3. **H4: Test full reboot** efter installation
 
 ## Kendte Sailfish OS detaljer
 
