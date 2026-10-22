@@ -118,3 +118,36 @@ echo "  Hvis JSON mangler, kør:"
 echo "    devel-su"
 echo "    cp /usr/share/harbour-straumr/eventsview/PriceWidget.qml /tmp/test.qml  # tjek sti"
 echo ""
+
+echo "$TAG === 12. Straumr-Widget logs (devel-su) ==="
+echo "  Kører: devel-su journalctl --no-pager -n 50 | grep -F 'Straumr-Widget'"
+echo "  ---"
+devel-su journalctl --no-pager -n 50 2>/dev/null | grep -F "Straumr-Widget" | tail -30 | sed 's/^/    /'
+echo "  ---"
+if [ -z "$(devel-su journalctl --no-pager -n 50 2>/dev/null | grep -F 'Straumr-Widget')" ]; then
+    echo "  INGEN Straumr-Widget logs fundet — widget QML er aldrig blevet loaded!"
+fi
+echo ""
+
+echo "$TAG === 13. Lipstick logs (alle widget-relaterede) ==="
+echo "  Kører: devel-su journalctl --no-pager -n 50 -u lipstick | grep -iE 'widget|straumr|eventsview'"
+echo "  ---"
+devel-su journalctl --no-pager -n 50 -u lipstick 2>/dev/null | grep -iE "widget|straumr|eventsview" | tail -20 | sed 's/^/    /'
+echo "  ---"
+echo ""
+
+echo "$TAG === 14. Alle lipstick QML fejl ==="
+echo "  Kører: devel-su journalctl --no-pager -n 100 -u lipstick | grep -iE 'qml|error|fail|cannot|no such'"
+echo "  ---"
+devel-su journalctl --no-pager -n 100 -u lipstick 2>/dev/null | grep -iE "qml|error|fail|cannot|no such" | tail -20 | sed 's/^/    /'
+echo "  ---"
+echo ""
+
+echo "$TAG === 15. Tjekker om widget er i EventsWidgetsModel ==="
+echo "  Dconf værdi igen (for sikkerheds skyld):"
+devel-su dconf read /desktop/lipstick-jolla-home/events_screen_widgets 2>/dev/null | sed 's/^/    /' || echo "    (ikke sat)"
+echo ""
+echo "  Hvis Straumr IKKE er i listen, kør:"
+echo "    devel-su dconf write /desktop/lipstick-jolla-home/events_screen_widgets \"['/usr/share/lipstick-jolla-home-qt5/eventsview/weather/WeatherLoader.qml', '/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml', '/usr/share/harbour-straumr/eventsview/PriceWidget.qml']\""
+echo "  (erstat vejene med dine faktiske system-widgets + Straumr)"
+echo ""

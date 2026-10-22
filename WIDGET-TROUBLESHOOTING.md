@@ -411,3 +411,12 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Ingen popup nødvendig — kode indtastes direkte i shell
 - Hele flowen er nu én kommando uden manuel indgriben
 - Fjernelse af gammel widget-RPM også via `devel-su rpm -e`
+
+---
+
+### H45: journalctl adgangsproblemer + grep regex (2026-10-22)
+- `journalctl -f` som normal bruger: "insufficient permissions" — ser kun egne logs
+- `devel-su journalctl -f | grep "[Straumr-Widget]"`: grep tolker [] som regex!
+- Løsning: Brug `grep -F "Straumr-Widget"` (fast string, ingen regex)
+- Eller: `devel-su journalctl -f | grep Straumr` (uden specialtegn)
+- Debug-script opdateret med korrekte kommandoer (trin 12-15)
