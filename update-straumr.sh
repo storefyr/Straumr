@@ -1,23 +1,30 @@
 #!/bin/sh
 # Straumr opdateringsskript — kør på Sailfish OS telefonen
 # Henter og installerer seneste version fra GitHub Releases i én kommando.
+# Genstarter kun lipstick (ikke hele telefonen) efter installation.
 #
 # Brug:
-#   curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/update-straumr.sh
-#   sh update-straumr.sh
-#
-# Eller hvis du allerede har skriptet liggende:
-#   sh update-straumr.sh
+#   curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/update-straumr.sh && sh update-straumr.sh
 #
 # Valgfrit — angiv en specifik version:
-#   sh update-straumr.sh 1.8.0
+#   curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/update-straumr.sh && sh update-straumr.sh 1.9.1
+#
+# Valgfrit — spring lipstick-genstart over (hvis du vil gøre det manuelt senere):
+#   sh update-straumr.sh 1.9.1 --no-restart
 
 set -e
 
 # --- Konfiguration ---
 REPO="storefyr/Straumr"
-DEFAULT_VERSION="1.8.0"
+DEFAULT_VERSION="1.9.1"
 VERSION="${1:-${DEFAULT_VERSION}}"
+NO_RESTART=""
+if [ "$2" = "--no-restart" ]; then
+    NO_RESTART="yes"
+elif [ "$1" = "--no-restart" ]; then
+    NO_RESTART="yes"
+    VERSION="${DEFAULT_VERSION}"
+fi
 ARCH="aarch64"
 RPM_NAME="harbour-straumr-${VERSION}-1.${ARCH}.rpm"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${RPM_NAME}"
@@ -42,7 +49,7 @@ if ! command -v pkcon >/dev/null 2>&1; then
 fi
 
 # --- Trin 2: Fjern gammel widget-RPM hvis den findes ---
-echo "--- Trin 1/4: Fjerner gammel widget-RPM (hvis installeret) ---"
+echo "--- Trin 1/5: Fjerner gammel widget-RPM (hvis installeret) ---"
 if pkcon list 2>/dev/null | grep -q "harbour-straumr-widget"; then
     echo "  Fjerner harbour-straumr-widget..."
     echo "  (Godkend med sikkerhedskode hvis bedt om)"
@@ -53,7 +60,7 @@ fi
 echo ""
 
 # --- Trin 3: Download ny RPM ---
-echo "--- Trin 2/4: Henter Straumr v${VERSION} ---"
+echo "--- Trin 2/5: Henter Straumr v${VERSION} ---"
 echo "  URL: ${DOWNLOAD_URL}"
 rm -f "${TMP_FILE}"
 curl -sL -o "${TMP_FILE}" "${DOWNLOAD_URL}"
@@ -73,13 +80,26 @@ echo "  Download færdig: $(wc -c < "${TMP_FILE}" | tr -d ' ') bytes"
 echo ""
 
 # --- Trin 4: Installer ---
-echo "--- Trin 3/4: Installerer Straumr v${VERSION} ---"
+echo "--- Trin 3/5: Installerer Straumr v${VERSION} ---"
 echo "  (Godkend med sikkerhedskode i popup)"
 pkcon install-local "${TMP_FILE}"
 echo ""
 
-# --- Trin 5: Ryd op ---
-echo "--- Trin 4/4: Rydder op ---"
+# --- Trin 5: Genstart lipstick (ikke hele telefonen!) ---
+if [ "$NO_RESTART" = "yes" ]; then
+    echo "--- Trin 4/5: Lipstick-genstart SKIPPET (--no-restart) ---"
+else
+    echo "--- Trin 4/5: Genstarter lipstick (hjemmeskærmen) ---"
+    echo "  (Dette tager 2-5 sekunder — skærmen blinker kort)"
+    systemctl --user restart lipstick 2>/dev/null || {
+        echo "  ADVARSEL: Kunne ikke genstarte lipstick automatisk."
+        echo "  Kør selv: systemctl --user restart lipstick"
+    }
+fi
+echo ""
+
+# --- Trin 6: Ryd op ---
+echo "--- Trin 5/5: Rydder op ---"
 rm -f "${TMP_FILE}"
 echo ""
 
@@ -89,8 +109,13 @@ echo "  ║  ✅ Straumr v${VERSION} er installeret!  ║"
 echo "  ╚═══════════════════════════════════════╝"
 echo ""
 echo "  Næste skridt:"
-echo "  1. Genstart telefonen (eller kør: systemctl --user restart lipstick)"
-echo "  2. Gå til: Indstillinger → Begivenhedsvisning"
-echo "  3. Slå 'Straumr' til"
-echo "  4. Stryg til venstre — se din elpris! ⚡"
+echo "  1. Gå til: Indstillinger → Begivenhedsvisning"
+echo "  2. Slå 'Straumr' til (hvis ikke allerede gjort)"
+echo "  3. Stryg til venstre — se din elpris! ⚡"
+echo ""
+echo "  Se debug logs med:"
+echo "    journalctl -f | grep '[Straumr-Widget]'"
+echo ""
+echo "  Kør fuld debug med:"
+echo "    curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/debug-widget.sh && sh debug-widget.sh"
 echo ""

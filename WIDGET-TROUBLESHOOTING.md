@@ -370,3 +370,15 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 3. Kør journalctl -f | grep "[Straumr-Widget]" i en terminal
 4. Stryg til venstre — hvad logges?
 5. Del hvad du ser (rod boks? ingen boks? log-linjer?)
+
+---
+
+## v1.9.1 opdatering — lipstick-genstart i stedet for telefon-genstart (2026-10-22)
+
+### H41: Opdateringsskript genstarter nu kun lipstick
+- Tidligere: Brugeren skulle genstarte HELE telefonen efter installation
+- Problem: Telefon-genstart er langsom og unødvendig — widget-konfiguration læses af lipstick
+- Ny: `systemctl --user restart lipstick` i skriptet (2-5 sekunder, skærmen blinker kort)
+- Tilføjet `--no-restart` flag hvis man vil springe over
+- Standard-version opdateret til 1.9.1
+- Hvis lipstick-genstart fejler, får brugeren besked om at køre den manuelt
