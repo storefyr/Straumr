@@ -65,11 +65,16 @@ else
 fi
 echo ""
 
-echo "$TAG Genstarter lipstick..."
+echo "$TAG Genstarter lipstick (hjemmeskærmen genindlæses)..."
 systemctl --user restart lipstick 2>/dev/null || {
     echo "  ADVARSEL: Kunne ikke genstarte lipstick."
     echo "  Kør selv: systemctl --user restart lipstick"
 }
+echo "  Lipstick genstartet — skærmen blinker kort."
+echo ""
+sleep 3
+echo "$TAG Verificerer dconf efter genstart:"
+dconf read /desktop/lipstick-jolla-home/events_screen_widgets
 echo ""
 
 echo "  ╔═══════════════════════════════════════╗"
