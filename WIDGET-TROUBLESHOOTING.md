@@ -429,3 +429,17 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Løsning: Brug `devel-su -c "kommando"` så password prompt går til samme terminal,
   eller kør uden baggrund (&) og brug Ctrl+C til at stoppe
 - Alternativ: devel-su journalctl --no-pager -n 100 | grep Straumr (ikke -f, ingen live)
+
+---
+
+### H47: INGEN Straumr logs i journalctl — widget QML loades aldrig (2026-10-22)
+- `devel-su journalctl --no-pager -n 200 | grep Straumr` returnerer TOMT
+- Dette er KRITISK: Det betyder at PriceWidget.qml ALDRIG er blevet loaded af lipstick
+- Widget QML kører i lipstick-processen, så dens console.log går til lipstick's journal
+- Hvis der ikke er NOGET output, er årsagen en af:
+  a) JSON-deskriptoren er ikke læst (forkert sti, ugyldig JSON, lipstick ikke genstartet)
+  b) Widget er ikke aktiveret i dconf (events_screen_widgets)
+  c) Widget er ikke tilføjet i EventsWidgetsModel (Indstillinger → Begivenhedsvisning)
+  d) Lipstick cacher widget-listen og skal genstartes
+  e) QML path i JSON peger på en fil der ikke findes
+- Næste skridt: Kør debug-widget.sh for at tjekke alle disse punkter systematisk
