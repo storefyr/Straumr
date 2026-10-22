@@ -486,3 +486,74 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 > `qml/eventsview/`, ender den på `/usr/share/<app>/qml/eventsview/` — ikke
 > `/usr/share/<app>/eventsview/`. For at undgå duplikater: læg widget QML på
 > root-niveau (`eventsview/`) som Admirality gør.**
+
+---
+
+## v1.9.2 resultat — Straumr vises i Indstillinger men uden toggle (2026-10-22)
+
+### H52: Straumr vises i Indstillinger → Begivenhedsvisning MEN uden toggle
+- Bruger ser "Straumr" i widget-listen under Widgets
+- Men der er INGEN toggle/switch ved siden af — kan ikke slås til!
+- Vejr og Kalender har toggles, Straumr har kun titel
+- Teksten over widget-listen siger "Installer Straumr fra Marked." (Install Straumr from Market)
+- Dette er SYSTEMETS standard-tekst når en widget ikke er "available"
+
+### H53: ROOT CAUSE — widget er ikke "available"
+- EventsWidgetsModel har to properties per widget: `enabled` (toggle) og `available`
+- `available` afhænger af `available_path` — filen skal eksistere OG være læsbar
+- Vores JSON har `available_path` sat til samme som `path`:
+  `/usr/share/harbour-straumr/eventsview/PriceWidget.qml`
+- Men lipstick kører som `defaultuser` i SailJail — måske kan den ikke læse filen?
+- Eller: `available_path` skal IKKE sættes for tredjeparts-widgets (docs siger "usually not needed")
+- Når `available` er false: widget vises med navn men uden toggle, og med "Installer fra Marked" tekst
+
+### H54: FIX — fjern available_path fra JSON (v1.9.3)
+- Pauligrinder's docs: "available_path exists for cases where the homescreen and application
+  ship separately. It is usually not needed for third-party widgets."
+- Admirality HAR `available_path` — men Admirality virker... hmm
+- Men måske er problemet at lipstick-jolla-home kører i en anden SailJail context
+  og ikke har adgang til /usr/share/harbour-straumr/
+- Løsning: Fjern `available_path` helt — lad EventsWidgetsModel bruge `path` til begge
+
+### H55: Alternativ — tjek filrettigheder
+- Filen skal være læsbar af `defaultuser` (lipstick kører som defaultuser)
+- Vores RPM installerer med root:root 644 — burde være læsbar af alle
+- Men SailJail kan blokere adgang til /usr/share/harbour-straumr/ for lipstick
+- Hvis lipstick kører i SailJail uden adgang til app-data, kan den ikke læse QML'en
+
+---
+
+### H56: Widget vises i Indstillinger men uden toggle — "ikke tilgængelig" (2026-10-22)
+- Screenshot: Straumr vises i widget-listen men har INGEN toggle
+- Vejr og Kalender har toggles, Straumr har kun navn
+- Tekst: "Installer Straumr fra Marked." (standard-tekst når available=false)
+- dconf er KORREKT: ['/usr/share/lipstick-jolla-home-qt5/eventsview/weather/WeatherLoader.qml',
+  '/usr/share/lipstick-jolla-home-qt5/eventsview/calendar/CalendarWidgetLoader.qml',
+  '/usr/share/harbour-straumr/eventsview/PriceWidget.qml']
+
+### H57: ROOT CAUSE — manglende translation_catalog og description_id
+- Sammenligning med Admirality's JSON afslørede forskelle:
+  - Admirality har: "translation_catalog": "harbour-admirality" (top-niveau)
+  - Admirality har: "description_id": "harbour-admirality-info-widget_description" (per widget)
+  - Admirality har: .ts fil + kompileret .qm i /usr/share/translations/
+  - Admirality bruger order 4, 5 (efter system widgets)
+  - Straumr havde: ingen translation_catalog, ingen description_id, order 3
+- EventsWidgetsModel bruger sandsynligvis description_id til at slå beskrivelsen op
+  via qtTrId(). Hvis description_id mangler eller ikke kan resolves, vises widget
+  som "ikke tilgængelig" (fallback: "Installer fra Marked")
+- order 3 kunne også kollidere med system widgets (vejr=1?, kalender=2?)
+
+### H58: FIX — tilføj translation_catalog + description_id + .ts/.qm (v1.9.3)
+- Tilføjet "translation_catalog": "harbour-straumr" til JSON top-niveau
+- Tilføjet "description_id": "harbour-straumr-widget_description" per widget
+- Ændret order fra 3 til 10 (efter system widgets, som Admirality)
+- Oprettet eventsview/harbour-straumr.ts med dansk oversættelse
+- Tilføjet lrelease build step i .pro (samme pattern som Admirality)
+- Installerer .qm til /usr/share/translations/harbour-straumr_eng_en.qm
+- Tilføjet %{_datadir}/translations/%{name}_eng_en.qm til spec og yaml %files
+
+### H59: Hvis v1.9.3 stadig ikke giver toggle
+- Tjek at .qm filen faktisk er i RPM'en: rpm -qlp harbour-straumr-*.rpm | grep qm
+- Tjek at .qm er på telefonen: ls /usr/share/translations/harbour-straumr*
+- Tjek lipstick logs for qtTrId fejl: devel-su journalctl -n 100 -u lipstick | grep -i "trid\|catalog\|translation"
+- Overvej at fjerne available_path helt (docs siger "usually not needed")

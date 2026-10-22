@@ -13,6 +13,7 @@ DISTFILES += qml/harbour-straumr.qml \
     qml/components/PriceGraph.qml \
     eventsview/PriceWidget.qml \
     eventsview/harbour-straumr.json \
+    eventsview/harbour-straumr.ts \
     rpm/harbour-straumr.spec \
     harbour-straumr.desktop
 
@@ -24,13 +25,24 @@ OTHER_FILES += README.md \
     rpm/harbour-straumr.spec \
     rpm/harbour-straumr.yaml
 
-# Events View widget: install QML + JSON in single RPM
-# Follows Admirality pattern: eventsview/ at root level (not qml/eventsview/)
-# libsailfishapp auto-installs DISTFILES to /usr/share/harbour-straumr/ preserving path
-# So eventsview/PriceWidget.qml -> /usr/share/harbour-straumr/eventsview/PriceWidget.qml
-# We also install JSON to Lipstick's eventswidgets dir
-
+# Events View widget: install JSON to Lipstick's eventswidgets dir
+# QML is installed by libsailfishapp via DISTFILES to /usr/share/harbour-straumr/eventsview/
 eventsWidgetJson.files = eventsview/harbour-straumr.json
 eventsWidgetJson.path = /usr/share/lipstick/eventswidgets
 
-INSTALLS += eventsWidgetJson
+# Translation: compile .ts to .qm and install to /usr/share/translations/
+# Settings → Events view shows the description only when qtTrId() resolves
+# description_id. The catalog is /usr/share/translations/harbour-straumr_eng_en.qm.
+EVENT_WIDGET_TS = $$PWD/eventsview/harbour-straumr.ts
+EVENT_WIDGET_QM = $$OUT_PWD/harbour-straumr_eng_en.qm
+eventswidget_qm.target = $$EVENT_WIDGET_QM
+eventswidget_qm.depends = $$EVENT_WIDGET_TS
+eventswidget_qm.commands = $$[QT_INSTALL_BINS]/lrelease -idbased $$EVENT_WIDGET_TS -qm $$EVENT_WIDGET_QM
+QMAKE_EXTRA_TARGETS += eventswidget_qm
+PRE_TARGETDEPS += $$EVENT_WIDGET_QM
+
+eventsWidgetQm.files = $$EVENT_WIDGET_QM
+eventsWidgetQm.path = /usr/share/translations
+eventsWidgetQm.CONFIG += no_check_exist
+
+INSTALLS += eventsWidgetJson eventsWidgetQm

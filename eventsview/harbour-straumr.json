@@ -1,12 +1,14 @@
 {
+    "translation_catalog": "harbour-straumr",
     "widgets": [
         {
             "title": "Straumr",
+            "description_id": "harbour-straumr-widget_description",
             "icon": "/usr/share/icons/hicolor/86x86/apps/harbour-straumr.png",
-            "order": 3,
+            "order": 10,
             "path": "/usr/share/harbour-straumr/eventsview/PriceWidget.qml",
-            "available_path": "/usr/share/harbour-straumr/eventsview/PriceWidget.qml",
-            "default_enabled": true
+            "default_enabled": true,
+            "available_path": "/usr/share/harbour-straumr/eventsview/PriceWidget.qml"
         }
     ]
 }

@@ -9,7 +9,7 @@ Name:       harbour-straumr
 # << macros
 
 Summary:    Straumr
-Version:    1.9.2
+Version:    1.9.3
 Release:    1
 Group:      Qt/Qt
 License:    LICENSE
@@ -68,5 +68,6 @@ desktop-file-install --delete-original       \
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
 %{_datadir}/lipstick/eventswidgets/%{name}.json
+%{_datadir}/translations/%{name}_eng_en.qm
 # >> files
 # << files
