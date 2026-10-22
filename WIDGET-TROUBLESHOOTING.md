@@ -402,3 +402,12 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Løsning: Skriptet downloader nu kun RPM'en til /tmp/ og viser instruktioner
 - Brugeren skal åbne Terminal-appen og køre pkcon install-local manuelt
   hvor popup'en virker normalt
+
+---
+
+### H44: Skiftet fra pkcon til devel-su + rpm (2026-10-22)
+- pkcon's polkit-popup virker ikke fra curl-piped scripts (H43)
+- Løsning: Brug `devel-su rpm -Uvh` i stedet — beder om kode i terminalen
+- Ingen popup nødvendig — kode indtastes direkte i shell
+- Hele flowen er nu én kommando uden manuel indgriben
+- Fjernelse af gammel widget-RPM også via `devel-su rpm -e`
