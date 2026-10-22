@@ -329,3 +329,44 @@ Grundig sammenligning af Straumr vs Admirality (arbejdende widget) afslørede fl
 
 ### Næste skridt
 Test v1.9.0 på enheden. Hvis stadig ikke virker, prøv H35a-e.
+
+---
+
+## v1.9.0 FEJLSLAGET — stadig ingen widget (2026-10-22)
+
+Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG ikke.
+
+### H36: Tilfojet omfattende logning (v1.9.1)
+- Alle livscyklus-faser logger nu med `[Straumr-Widget]` prefix
+- Component.onCompleted, onVisibleChanged, onActiveChanged, onWidthChanged, onHeightChanged
+- Alle HTTP kald logger URL, status, record count, fejl
+- Tariff-beregning logger hver komponent og slutpris
+- Debug info vist direkte i widget: w=XXX h=XXX vis=true act=true evv=undef
+- Rod kant omkring widget (synlig hvis den loades)
+- Se logs: journalctl -f | grep "[Straumr-Widget]"
+
+### H37: Fjernet eventsViewVisible dependency
+- Tidligere: property bool active: visible && eventsViewVisible
+- Problem: eventsViewVisible kan vaere undefined for tredjeparts-widgets
+- Ny: property bool active: visible — simplere, faerre fejl
+- Debug label viser om eventsViewVisible er defineret
+
+### H38: Ny debug-widget.sh — kor pa telefonen
+- Tjekker 11 ting: RPM installeret, JSON findes, QML findes, fil-stier,
+  dconf-indstillinger, gammel widget-RPM, JSON validitet, journalctl logs,
+  lipstick logs, proces status, netvaerkstest
+- Brug: curl -LO .../debug-widget.sh && sh debug-widget.sh
+
+### H39: Mulige arsager hvis v1.9.1 viser rod boks men ingen data
+- Hvis rod boks vises: Widget QML loades korrekt, men data-fetch fejler
+  -> Tjek journalctl -f | grep Straumr-Widget for HTTP fejl
+  -> Lipstick kører maaske uden Internet permission (SailJail?)
+- Hvis ingen rod boks: Widget loades slet ikke af Lipstick
+  -> JSON ikke laest, eller QML path forkert, eller widget ikke aktiveret
+
+### H40: Naeste diagnostiske skridt
+1. Installer v1.9.1
+2. Kør debug-widget.sh pa telefonen — del output
+3. Kør journalctl -f | grep "[Straumr-Widget]" i en terminal
+4. Stryg til venstre — hvad logges?
+5. Del hvad du ser (rod boks? ingen boks? log-linjer?)
