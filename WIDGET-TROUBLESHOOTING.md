@@ -443,3 +443,46 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
   d) Lipstick cacher widget-listen og skal genstartes
   e) QML path i JSON peger på en fil der ikke findes
 - Næste skridt: Kør debug-widget.sh for at tjekke alle disse punkter systematisk
+
+---
+
+## v1.9.2 — ROOT CAUSE ENDELIGT FUNDET! (2026-10-22)
+
+### H48: DUPLIKAT QML-FIL — libsailfishapp installerer til forkert sti
+- Brugerens dconf viste BÅDE:
+  - `/usr/share/harbour-straumr/qml/eventsview/PriceWidget.qml` (gammel sti)
+  - `/usr/share/harbour-straumr/eventsview/PriceWidget.qml` (ny sti)
+- Årsag: `qml/eventsview/PriceWidget.qml` var i DISTFILES
+- libsailfishapp (CONFIG += sailfishapp) installerer automatisk DISTFILES QML
+  til `/usr/share/<name>/` bevarende sti → `/usr/share/harbour-straumr/qml/eventsview/`
+- Vores custom INSTALLS installerede SAMME fil til `/usr/share/harbour-straumr/eventsview/`
+- Resultat: To forskellige kopier af PriceWidget.qml på forskellige stier!
+- Lipstick læste sandsynligvis den gamle kopi (uden logging) fra qml/eventsview/
+
+### H49: dconf var også rodet — stray entries fra tidligere tests
+- dconf havde `/usr/share/lipstick-jolla-home-qt5/eventsview/PriceWidget.qml` (H15 test)
+- Den fil findes ikke længere — lipstick fejler stille på den
+- Også to Straumr entries (gammel + ny sti)
+
+### H50: FIX — match Admirality struktur præcist (v1.9.2)
+- Flyttet `qml/eventsview/PriceWidget.qml` → `eventsview/PriceWidget.qml` (root niveau)
+- Flyttet `widget/eventswidgets/harbour-straumr.json` → `eventsview/harbour-straumr.json`
+- Opdateret .pro: DISTFILES bruger `eventsview/PriceWidget.qml` (ikke qml/eventsview/)
+- libsailfishapp installerer nu til `/usr/share/harbour-straumr/eventsview/PriceWidget.qml`
+- Samme sti som JSON peger på — ingen duplikat!
+- Fjernet custom eventsWidgetQml INSTALLS (ikke længere nødvendig — DISTFILES håndterer det)
+- Tilføjet fix-dconf.sh til at rense dconf og fjerne gamle filer
+
+### H51: Systemfiler i eventswidgets/ — IKKE et problem
+- `/usr/share/lipstick/eventswidgets/` indeholder også:
+  - `eventswidgets.json` (599 bytes, system — kalender widget?)
+  - `weatherwidget.json` (585 bytes, system — vejr widget)
+- Disse er SYSTEM-filer, ikke tredjeparts. Lipstick læser alle *.json i mappen.
+- Vores `harbour-straumr.json` ligger alongside — korrekt.
+
+### Lektie
+> **Med `CONFIG += sailfishapp` installerer libsailfishapp automatisk ALLE QML-filer
+> i DISTFILES til `/usr/share/<app>/` (bevarende sti). Hvis widget QML ligger under
+> `qml/eventsview/`, ender den på `/usr/share/<app>/qml/eventsview/` — ikke
+> `/usr/share/<app>/eventsview/`. For at undgå duplikater: læg widget QML på
+> root-niveau (`eventsview/`) som Admirality gør.**
