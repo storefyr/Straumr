@@ -57,8 +57,10 @@ Data gemmes i `~/.local/share/io.github.storefyr/Straumr/` (sættes automatisk a
 Kør dette på din Sailfish OS telefon for automatisk at hente og installere seneste version:
 
 ```bash
-curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/update-straumr.sh && sh update-straumr.sh
+curl -LO https://raw.githubusercontent.com/storefyr/Straumr/vibe/straumr-hej-verden-8d2220/update-straumr.sh && sh update-straumr.sh
 ```
+
+> **Bemærk:** Når PR #1 merges til `main`, skifter URL'en til `.../main/update-straumr.sh`.
 
 Skriptet:
 1. Fjerner gammel `harbour-straumr-widget` RPM hvis installeret
