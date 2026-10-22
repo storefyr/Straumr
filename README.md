@@ -50,6 +50,44 @@ App'en kører i SailJail med følgende permission:
 
 Data gemmes i `~/.local/share/io.github.storefyr/Straumr/` (sættes automatisk af libsailfishapp ud fra `[X-Sailjail]`-sektionen i .desktop-filen).
 
+## Installation og opdatering
+
+### Én kommando på telefonen
+
+Kør dette på din Sailfish OS telefon for automatisk at hente og installere seneste version:
+
+```bash
+curl -LO https://raw.githubusercontent.com/storefyr/Straumr/main/update-straumr.sh && sh update-straumr.sh
+```
+
+Skriptet:
+1. Fjerner gammel `harbour-straumr-widget` RPM hvis installeret
+2. Henter seneste RPM fra [GitHub Releases](https://github.com/storefyr/Straumr/releases)
+3. Installerer den (du skal godkende med sikkerhedskode)
+4. Rydder op
+
+**Genstart telefonen bagefter**, gå til **Indstillinger → Begivenhedsvisning** og slå **Straumr** til.
+
+### Manuel installation
+
+Download RPM'en til din telefon fra [Releases](https://github.com/storefyr/Straumr/releases):
+
+| Fil | Til enhed |
+|-----|-----------|
+| `harbour-straumr-X.Y.Z-1.aarch64.rpm` | Jolla Phone 2026, Xperia 10 III/IV/V |
+| `harbour-straumr-X.Y.Z-1.armv7hl.rpm` | Ældre telefoner (Jolla 1, C, Xperia X) |
+
+```bash
+devel-su
+pkcon install local ~/Downloads/harbour-straumr-*-1.aarch64.rpm
+```
+
+### Events View widget
+
+Fra v1.8.0 er widgetten **inkluderet i samme RPM** som app'en — ingen separat pakke nødvendig.
+
+
+
 ## Fejlfinding
 
 Se loggen på telefonen:
