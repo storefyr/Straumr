@@ -254,3 +254,40 @@ Håndterer kodeord ved at bruge Sailfish OS' indbyggede godkendelsesdialog
 - Events View widgets loades via `Loader { active: model.enabled; source: model.path }`
 - `model.enabled` kommer fra dconf `events_screen_widgets`
 - `model.available` afhænger af `available_path` — filen skal eksistere
+
+## GENNEMBRUD: v1.8.0 (2026-10-22)
+
+### H26: Vejrwidget VIRKER — systemopdatering er IKKE årsagen
+- Bruger bekræftede at MET Norway/Yr vejrwidget fungerer fint på Events View
+- Screenshot viste 10° i Roskilde med timeprognose
+- **Konklusion:** Events View widgets virker på 5.2.0.20. Problemet er specifikt Straumr.
+
+### H27: ROOT CAUSE — split packaging
+- Research af fungerende tredjeparts-widgets på SFOS 5.x:
+  - **Admirality** (Pauligrinder, v0.2.10): Én RPM installerer BÅDE JSON og QML
+  - **Events View Custom Text** (Okxa, OpenRepos): Én RPM, `noarch`, JSON + QML sammen
+  - **Sahkonseuranta** (Zesseth): Split packaging nævnt som workaround for 4.6 (som har ingen loader)
+- Straumr brugte **split packaging** (separat companion-RPM `harbour-straumr-widget` kun til JSON)
+- **Alle v1.2.0–v1.7.0 fejlede fordi JSON og QML var i forskellige RPM'er**
+- Selv v1.1.0 (som virkede før) stoppede med at virke — sandsynligvis fordi bruger installerede den gamle widget-RPM som ikke længere matchede
+
+### H28: FIX — single RPM packaging (Admirality pattern)
+- `harbour-straumr.pro` tilføjet `INSTALLS += eventsWidgetQml eventsWidgetJson`
+- QML installeres til `/usr/share/harbour-straumr/qml/eventsview/`
+- JSON installeres til `/usr/share/lipstick/eventswidgets/harbour-straumr.json`
+- Hoved-RPM'en (`rpm/harbour-straumr.yaml`) inkluderer nu `%{_datadir}/lipstick/eventswidgets/%{name}.json`
+- **Companion widget-RPM fjernet** (`widget/rpm/` slettet, `build-widget` CI job fjernet)
+- `PriceWidget.qml` omskrevet: `Item` root med `implicitHeight`, `active` gate, `refresh()`/`reload()`/`save()`
+- `PriceWidgetContent.qml`: sekventiel tariff-fetch (undgår rate limiting), `FALLBACK_NETTARIF` hardcoded Radius vinter 2026 værdier
+
+### Widget-kontrakt (fra Pauligrinder's dokumentation)
+- QML skal have `refresh()`, `reload()`, `save()` funktioner
+- Root item skal rapportere korrekt `implicitHeight`
+- Widget kører i Lipstick-processen (ikke app-processen)
+- `available_path` "is usually not needed for third-party widgets"
+- JSON kan inkludere `translation_catalog`, `description_id`, `translation_id`
+
+### Lektie
+> **På SFOS 5.x skal Events View widgets pakkes i SAMME RPM som app'en.**
+> Split packaging (separat widget-RPM) virker ikke på 5.2.
+> Følg Admirality/Okxa pattern: én RPM, `INSTALLS` i .pro filen.

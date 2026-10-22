@@ -1,11 +1,13 @@
-import QtQuick 2.0
+import QtQuick 2.6
 import Sailfish.Silica 1.0
 
 Item {
     id: widget
 
     width: parent ? parent.width : Screen.width
-    implicitHeight: 120
+    implicitWidth: width
+    implicitHeight: column.height
+    height: implicitHeight
 
     property string statusMsg: "Starter..."
     property real spotPrice: 0
@@ -14,6 +16,18 @@ Item {
 
     readonly property string GRID_GLN: "5790000705689"
     readonly property string ENERGINET_GLN: "5790000432752"
+
+    // Fallback nettarif values (Radius Elnet, Nettarif C, vinter 2026-10-01 to 2027-04-01)
+    readonly property var FALLBACK_NETTARIF: {
+        "Price1": 0.106175, "Price2": 0.106175, "Price3": 0.106175,
+        "Price4": 0.106175, "Price5": 0.106175, "Price6": 0.106175,
+        "Price7": 0.318524, "Price8": 0.318524, "Price9": 0.318524,
+        "Price10": 0.318524, "Price11": 0.318524, "Price12": 0.318524,
+        "Price13": 0.318524, "Price14": 0.318524, "Price15": 0.318524,
+        "Price16": 0.318524, "Price17": 0.318524,
+        "Price18": 0.955573, "Price19": 0.955573, "Price20": 0.955573, "Price21": 0.955573,
+        "Price22": 0.318524, "Price23": 0.318524, "Price24": 0.318524
+    }
 
     function pad(n) { return n < 10 ? "0" + n : "" + n }
 
@@ -45,20 +59,20 @@ Item {
                 cb(new Error("HTTP " + xhr.status), null)
             }
         }
-        xhr.onerror = function() { cb(new Error("Netværk"), null) }
+        xhr.onerror = function() { cb(new Error("Netvaerk"), null) }
         xhr.open("GET", url, true)
         xhr.timeout = 15000
+        xhr.ontimeout = function() { cb(new Error("Timeout"), null) }
         xhr.send()
     }
 
     function refresh() {
-        statusMsg = "Tjekker XHR..."
+        statusMsg = "Henter..."
         try {
             if (typeof XMLHttpRequest === "undefined") {
                 statusMsg = "Ingen XMLHttpRequest!"
                 return
             }
-            statusMsg = "Henter..."
             var filter = encodeURIComponent(JSON.stringify({"PriceArea": ["DK2"]}))
             var url = "https://api.energidataservice.dk/dataset/DayAheadPrices?filter=" + filter +
                 "&start=" + todayISO() +
@@ -88,7 +102,7 @@ Item {
                                 statusMsg = "Henter tariffer..."
                                 fetchTariffs(current["DayAheadPriceDKK"], now.getHours())
                             } else {
-                                statusMsg = "Ingen nuværende"
+                                statusMsg = "Ingen nuvaerende"
                             }
                         } else {
                             statusMsg = "Ingen records"
@@ -101,7 +115,7 @@ Item {
                 }
             }
             xhr.onerror = function() {
-                statusMsg = "Netværksfejl"
+                statusMsg = "Netvaerksfejl"
             }
             xhr.open("GET", url, true)
             xhr.timeout = 15000
@@ -123,45 +137,33 @@ Item {
     }
 
     function fetchTariffs(spotDkkMwh, hour) {
-        var t = {system: 0, trans: 0, el: 0, nettarif: 0}
-        var done = 0
+        var t = {system: 0, trans: 0, el: 0, nettarifC: null}
         var now = new Date()
 
-        function checkDone() {
-            done++
-            if (done === 4) {
-                var nettarifC = t.nettarifC
-                var nettarif = 0
-                if (nettarifC) {
-                    var p = nettarifC["Price" + (hour + 1)]
-                    nettarif = (p === null || p === undefined) ? 0 : p
-                }
-                totalPrice = (spotDkkMwh / 1000.0 + nettarif + t.system + t.trans + t.el) * 1.25
-                statusMsg = "OK"
-            }
-        }
+        // Sequential fetch to avoid rate limiting in Lipstick process
+        httpGet(buildTariffUrl(ENERGINET_GLN, "Systemtarif"), function(e1, d1) {
+            if (!e1 && d1 && d1.records) { var r = pickValid(d1.records, now); if (r) t.system = r.Price1 || 0 }
 
-        httpGet(buildTariffUrl(ENERGINET_GLN, "Systemtarif"), function(e, d) {
-            if (!e && d && d.records) { var r = pickValid(d.records, now); if (r) t.system = r.Price1 || 0 }
-            checkDone()
-        })
-        httpGet(buildTariffUrl(ENERGINET_GLN, "Transmissions nettarif"), function(e, d) {
-            if (!e && d && d.records) { var r = pickValid(d.records, now); if (r) t.trans = r.Price1 || 0 }
-            checkDone()
-        })
-        httpGet(buildTariffUrl(ENERGINET_GLN, "Elafgift"), function(e, d) {
-            if (!e && d && d.records) { var r = pickValid(d.records, now); if (r) t.el = r.Price1 || 0 }
-            checkDone()
-        })
-        httpGet(buildTariffUrl(GRID_GLN, "Nettarif C"), function(e, d) {
-            if (!e && d && d.records) { var r = pickValid(d.records, now); if (r) t.nettarifC = r }
-            checkDone()
-        })
-    }
+            httpGet(buildTariffUrl(ENERGINET_GLN, "Transmissions nettarif"), function(e2, d2) {
+                if (!e2 && d2 && d2.records) { var r = pickValid(d2.records, now); if (r) t.trans = r.Price1 || 0 }
 
-    Component.onCompleted: {
-        statusMsg = "Component klar"
-        refresh()
+                httpGet(buildTariffUrl(ENERGINET_GLN, "Elafgift"), function(e3, d3) {
+                    if (!e3 && d3 && d3.records) { var r = pickValid(d3.records, now); if (r) t.el = r.Price1 || 0 }
+
+                    httpGet(buildTariffUrl(GRID_GLN, "Nettarif C"), function(e4, d4) {
+                        if (!e4 && d4 && d4.records) { var r = pickValid(d4.records, now); if (r) t.nettarifC = r }
+
+                        // Use fallback if Nettarif C fetch failed
+                        var nettarifSource = t.nettarifC || widget.FALLBACK_NETTARIF
+                        var p = nettarifSource["Price" + (hour + 1)]
+                        var nettarif = (p === null || p === undefined) ? 0 : p
+
+                        totalPrice = (spotDkkMwh / 1000.0 + nettarif + t.system + t.trans + t.el) * 1.25
+                        statusMsg = "OK"
+                    })
+                })
+            })
+        })
     }
 
     Rectangle {
@@ -172,6 +174,9 @@ Item {
     }
 
     Column {
+        id: column
+        width: parent.width
+        spacing: Theme.paddingSmall
         anchors {
             left: parent.left
             right: parent.right
@@ -179,8 +184,8 @@ Item {
             leftMargin: Theme.horizontalPageMargin
             rightMargin: Theme.horizontalPageMargin
             topMargin: Theme.paddingMedium
+            bottomMargin: Theme.paddingMedium
         }
-        spacing: Theme.paddingSmall
 
         Row {
             width: parent.width

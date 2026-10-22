@@ -21,7 +21,7 @@ jobs:
           pip install pyyaml --quiet
           python3 - <<'EOF'
           import yaml
-          for f in ('rpm/harbour-straumr.yaml', 'widget/rpm/harbour-straumr-widget.yaml'):
+          for f in ('rpm/harbour-straumr.yaml',):
               d = yaml.safe_load(open(f))
               assert d['Builder'] in ('qmake5', 'none'), d['Builder']
               print(f, 'OK:', d['Name'], d['Version'])
@@ -31,7 +31,7 @@ jobs:
         run: |
           python3 - <<'EOF'
           import glob
-          for f in glob.glob('qml/**/*.qml', recursive=True) + glob.glob('widget/qml/**/*.qml', recursive=True):
+          for f in glob.glob('qml/**/*.qml', recursive=True):
               text = open(f).read()
               assert text.count('{') == text.count('}'), f'unbalanced braces in {f}'
               print(f, 'OK')
@@ -108,43 +108,10 @@ jobs:
           name: rpms-${{ matrix.arch }}
           path: RPMS/*.rpm
 
-  build-widget:
-    name: Build widget RPM (noarch)
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build widget RPM
-        run: |
-          mkdir -p widget/RPMS
-          chmod 777 widget/RPMS
-          docker run --rm --privileged \
-            -v $GITHUB_WORKSPACE:/workspace \
-            -e RELEASE=${{ env.RELEASE }} \
-            -e ARCH=aarch64 \
-            coderus/sailfishos-platform-sdk:${{ env.RELEASE }} \
-            /bin/bash -c '
-              set -ex
-              mkdir -p /home/mersdk/build
-              cd /home/mersdk/build
-              cp -r /workspace/widget .
-              cd widget
-              mb2 -t SailfishOS-${RELEASE}-aarch64 build
-              mkdir -p /workspace/widget/RPMS
-              cp -r RPMS/*.rpm /workspace/widget/RPMS/
-            '
-
-      - name: Upload widget RPM
-        uses: actions/upload-artifact@v4
-        with:
-          name: rpms-widget
-          path: widget/RPMS/*.rpm
-
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build, build-widget]
+    needs: [build]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
@@ -163,18 +130,22 @@ jobs:
           body: |
             ## Installation
 
-            Download de RPM'er der passer til din telefon:
+            Download den RPM der passer til din telefon:
 
             | Fil | Til enhed |
             |-----|-----------|
             | `harbour-straumr-${{ github.ref_name }}-1.aarch64.rpm` | Jolla Phone 2026, Xperia 10 III/IV/V |
             | `harbour-straumr-${{ github.ref_name }}-1.armv7hl.rpm` | Ældre telefoner (Jolla 1, C, Xperia X) |
-            | `harbour-straumr-widget-${{ github.ref_name }}-1.noarch.rpm` | Events View widget (alle enheder) |
 
-            Installer på telefonen (begge RPM'er — widget-RPM'en aktiverer widgetten i begivenhedsvisningen):
+            Installer på telefonen:
             ```
             devel-su
-            pkcon install local ~/Downloads/harbour-straumr-*-1.aarch64.rpm ~/Downloads/harbour-straumr-widget-*-1.noarch.rpm
+            pkcon install local ~/Downloads/harbour-straumr-*-1.aarch64.rpm
+            ```
+
+            Hvis du tidligere har installeret `harbour-straumr-widget`, fjern den først:
+            ```
+            pkcon remove harbour-straumr-widget
             ```
 
             Genstart derefter telefonen, gå til **Indstillinger → Begivenhedsvisning** og slå Straumr til.
