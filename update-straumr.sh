@@ -15,7 +15,7 @@ set -e
 
 # --- Konfiguration ---
 REPO="storefyr/Straumr"
-DEFAULT_VERSION="1.9.2"
+DEFAULT_VERSION="1.9.3"
 VERSION="${1:-${DEFAULT_VERSION}}"
 ARCH="aarch64"
 RPM_NAME="harbour-straumr-${VERSION}-1.${ARCH}.rpm"
