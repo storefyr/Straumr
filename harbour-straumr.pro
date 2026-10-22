@@ -12,7 +12,7 @@ DISTFILES += qml/harbour-straumr.qml \
     qml/components/PriceDisplay.qml \
     qml/components/PriceGraph.qml \
     qml/eventsview/PriceWidget.qml \
-    qml/eventsview/PriceWidgetContent.qml \
+    widget/eventswidgets/harbour-straumr.json \
     rpm/harbour-straumr.spec \
     harbour-straumr.desktop
 
@@ -24,11 +24,11 @@ OTHER_FILES += README.md \
     rpm/harbour-straumr.spec \
     rpm/harbour-straumr.yaml
 
-# Events View widget: install QML to app dir + JSON to Lipstick's eventswidgets dir
-# This follows the Admirality pattern (single RPM, no separate widget package)
-eventsWidgetQml.files = qml/eventsview/PriceWidget.qml \
-                        qml/eventsview/PriceWidgetContent.qml
-eventsWidgetQml.path = /usr/share/harbour-straumr/qml/eventsview
+# Events View widget: install QML + JSON in single RPM
+# Follows Admirality pattern exactly: QML to /usr/share/harbour-straumr/eventsview/
+# (NOT qml/eventsview/ — Admirality puts widget QML directly in eventsview/)
+eventsWidgetQml.files = qml/eventsview/PriceWidget.qml
+eventsWidgetQml.path = /usr/share/harbour-straumr/eventsview
 
 eventsWidgetJson.files = widget/eventswidgets/harbour-straumr.json
 eventsWidgetJson.path = /usr/share/lipstick/eventswidgets

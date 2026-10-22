@@ -291,3 +291,41 @@ Håndterer kodeord ved at bruge Sailfish OS' indbyggede godkendelsesdialog
 > **På SFOS 5.x skal Events View widgets pakkes i SAMME RPM som app'en.**
 > Split packaging (separat widget-RPM) virker ikke på 5.2.
 > Følg Admirality/Okxa pattern: én RPM, `INSTALLS` i .pro filen.
+
+---
+
+## v1.8.0 FEJLSLAGET — stadig ingen widget (2026-10-22)
+
+Bruger installerede v1.8.0 (single RPM packaging) men widget vises STADIG ikke.
+
+### H29: Detaljeret sammenligning med Admirality
+Grundig sammenligning af Straumr vs Admirality (arbejdende widget) afslørede flere kritiske forskelle:
+
+| Aspekt | Admirality (virker) | Straumr v1.8.0 (virker ikke) |
+|--------|---------------------|------------------------------|
+| **QML install sti** | `/usr/share/harbour-admirality/eventsview/` | `/usr/share/harbour-straumr/qml/eventsview/` |
+| **Loader wrapper** | Ingen — indhold direkte i `Item` root | `Loader { source: PriceWidgetContent.qml }` |
+| **active property** | `visible && eventsViewVisible` | `visible && (typeof eventsViewVisible !== "undefined" ? eventsViewVisible : true)` |
+| **height** | `Math.max(column.height, Theme.itemSizeMedium)` | `content.implicitHeight` (via Loader) |
+| **Timer** | `interval: 30000, running: root.active` | Ingen |
+| **PriceWidgetContent** | — | Separat fil (extra QML load step) |
+
+### H30-H34: FIX — match Admirality præcist (v1.9.0)
+1. **Fjernet Loader wrapper** — alt indhold nu direkte i `PriceWidget.qml` `Item` root
+2. **Flyttet QML-sti** — fra `/usr/share/harbour-straumr/qml/eventsview/` til `/usr/share/harbour-straumr/eventsview/` (matcher Admirality)
+3. **Fikset active property** — `visible && eventsViewVisible` uden `typeof` check
+4. **Tilføjet height floor** — `Math.max(column.height + padding*2, Theme.itemSizeMedium)`
+5. **Slettet PriceWidgetContent.qml** — én fil, ingen ekstra QML load
+6. **Tilføjet Timer** — auto-refresh hver 5. minut når aktiv
+7. **Opdateret JSON path** — `/usr/share/harbour-straumr/eventsview/PriceWidget.qml`
+8. **Opdateret .pro** — `eventsWidgetQml.path = /usr/share/harbour-straumr/eventsview`
+
+### H35: Hypoteser hvis v1.9.0 stadig fejler
+- **H35a**: Lipstick cacher widget-listen — måske skal `lipstick` genstartes (ikke bare telefonen)
+- **H35b**: JSON skal måske have `translation_catalog` field (Admirality har det)
+- **H35c**: Widget QML skal måske importere `org.nemomobile.lipstick 0.1` for at få `eventsViewVisible`
+- **H35d**: `eventsViewVisible` er måske ikke defineret — Lipstick sætter den måske kun på system widgets
+- **H35e**: Måske skal widget QML ligge i `/usr/share/lipstick-jolla-home-qt5/eventsview/` i stedet
+
+### Næste skridt
+Test v1.9.0 på enheden. Hvis stadig ikke virker, prøv H35a-e.
