@@ -420,3 +420,12 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Løsning: Brug `grep -F "Straumr-Widget"` (fast string, ingen regex)
 - Eller: `devel-su journalctl -f | grep Straumr` (uden specialtegn)
 - Debug-script opdateret med korrekte kommandoer (trin 12-15)
+
+---
+
+### H46: Baggrundsjob stoppet af tty output (2026-10-22)
+- `devel-su journalctl -f | grep Straumr > /tmp/file 2>&1 &` stoppes med "Stopped (tty output)"
+- Årsag: devel-su beder om password på tty, men jobbet kører i baggrunden uden tty adgang
+- Løsning: Brug `devel-su -c "kommando"` så password prompt går til samme terminal,
+  eller kør uden baggrund (&) og brug Ctrl+C til at stoppe
+- Alternativ: devel-su journalctl --no-pager -n 100 | grep Straumr (ikke -f, ingen live)
