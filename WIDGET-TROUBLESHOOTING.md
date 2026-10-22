@@ -557,3 +557,17 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Tjek at .qm er på telefonen: ls /usr/share/translations/harbour-straumr*
 - Tjek lipstick logs for qtTrId fejl: devel-su journalctl -n 100 -u lipstick | grep -i "trid\|catalog\|translation"
 - Overvej at fjerne available_path helt (docs siger "usually not needed")
+
+---
+
+### H60: Opdateringsskript renser nu først (2026-10-22)
+- Bruger foreslog afinstallation og fjernelse af gamle filer først
+- Nyt update-straumr.sh har 5 trin:
+  1. RENS: Fjerner gammel widget-RPM, nuværende Straumr-RPM,
+     stray filer fra tests (lipstick-jolla-home/eventsview/PriceWidget.qml,
+     gamle qml/eventsview/ stier, widget/ mapper), renser dconf
+  2. DOWNLOAD: Henter nyeste RPM fra GitHub
+  3. INSTALLER: devel-su rpm -Uvh
+  4. SÆT DCONF: Tilføjer Straumr til events_screen_widgets efter install
+  5. GENSTART LIPSTICK: systemctl --user restart lipstick
+- Sikrer en helt ren installation uden gamle/stray filer
