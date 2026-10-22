@@ -392,3 +392,13 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Fix: pkcon install-local køres nu med bedre instruktioner og baggrundshåndtering
 - Hvis det stadig fejler: kør manuelt `pkcon install-local /tmp/harbour-straumr-*.rpm`
   så kommer popup'en garanteret frem
+
+---
+
+### H43: pkcon popup virker ikke fra curl-piped script (2026-10-22)
+- Bruger fik igen "Failed to obtain authentication" selv med baggrundshåndtering
+- Årsag: Sailfish OS' polkit-agent (sikkerhedskode-popup) kan ikke vise GUI
+  når kommandoen køres fra et curl-piped shell script uden korrekt session
+- Løsning: Skriptet downloader nu kun RPM'en til /tmp/ og viser instruktioner
+- Brugeren skal åbne Terminal-appen og køre pkcon install-local manuelt
+  hvor popup'en virker normalt
