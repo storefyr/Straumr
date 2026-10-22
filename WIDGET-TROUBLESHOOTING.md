@@ -571,3 +571,29 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
   4. SÆT DCONF: Tilføjer Straumr til events_screen_widgets efter install
   5. GENSTART LIPSTICK: systemctl --user restart lipstick
 - Sikrer en helt ren installation uden gamle/stray filer
+
+---
+
+### H61: v1.9.3 stadig grå — translation_catalog/description_id ikke nok (2026-10-22)
+- Bruger installerede v1.9.3 med translation_catalog + description_id + .qm
+- Straumr er STADIG grå og kan ikke slås til i Indstillinger → Begivenhedsvisning
+- Dette betyder EventsWidgetsModel stadig rapporterer available=false
+- translation_catalog/description_id påvirker kun BESKRIVESTEKSTEN, ikke available
+
+### H62: Hvad bestemmer "available" i EventsWidgetsModel?
+- available_path bruges til at tjekke om widget-filen eksisterer
+- Men der må være noget ANDET der fejler
+- Hypoteser:
+  a) EventsWidgetsModel prøver at loade QML'en og fejler (parse error, import error)
+  b) available_path skal pege på .desktop filen, ikke QML filen
+  c) Lipstick kører i SailJail og kan ikke læse /usr/share/harbour-straumr/
+  d) Der mangler en særlig permission eller D-Bus interface
+  e) JSON formatet er stadig ikke helt korrekt
+
+### H63: Næste diagnostiske skridt
+- Lav en MINIMAL widget QML (kun en rød Rectangle, ingen imports udover QtQuick)
+  for at teste om problemet er i QML'en eller i registreringen
+- Hvis minimal widget virker: problemet er i PriceWidget.qml (imports, syntax)
+- Hvis minimal widget ikke virker: problemet er i JSON/packaging
+- Tjek også: kører lipstick i SailJail? Har den adgang til /usr/share/harbour-straumr/?
+  → devel-su cat /proc/$(pidof lipstick)/status | grep -i jail
