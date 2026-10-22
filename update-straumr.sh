@@ -81,8 +81,46 @@ echo ""
 
 # --- Trin 4: Installer ---
 echo "--- Trin 3/5: Installerer Straumr v${VERSION} ---"
-echo "  (Godkend med sikkerhedskode i popup)"
-pkcon install-local "${TMP_FILE}"
+echo ""
+echo "  VIGTIGT: pkcon vil vise en popup-dialog for sikkerhedskode."
+echo "  Kig efter popup'en og indtast din sikkerhedskode der!"
+echo ""
+# Kør installationen i baggrunden så popup'en kan komme frem,
+# og vent på at den bliver færdig.
+pkcon install-local "${TMP_FILE}" &
+PKCON_PID=$!
+
+# Vent på at pkcon er færdig (max 120 sekunder)
+WAITED=0
+while kill -0 $PKCON_PID 2>/dev/null && [ $WAITED -lt 120 ]; do
+    sleep 1
+    WAITED=$((WAITED + 1))
+done
+
+# Tjek om processen stadig kører (timeout)
+if kill -0 $PKCON_PID 2>/dev/null; then
+    echo ""
+    echo "  ADVARSEL: Installationen tog for lang tid — blev popup'en vist?"
+    echo "  Prøv at køre manuelt:"
+    echo "    pkcon install-local ${TMP_FILE}"
+    kill $PKCON_PID 2>/dev/null || true
+    rm -f "${TMP_FILE}"
+    exit 1
+fi
+
+# Vent på exit code
+wait $PKCON_PID
+PKCON_EXIT=$?
+
+if [ $PKCON_EXIT -ne 0 ]; then
+    echo ""
+    echo "  FEJL: Installation fejlede (exit code: $PKCON_EXIT)"
+    echo "  Hvis popup'en ikke dukkede op, prøv at køre manuelt:"
+    echo "    pkcon install-local ${TMP_FILE}"
+    echo "  (Så kan du se popup'en og indtaste sikkerhedskoden)"
+    exit 1
+fi
+echo "  Installation OK"
 echo ""
 
 # --- Trin 5: Genstart lipstick (ikke hele telefonen!) ---

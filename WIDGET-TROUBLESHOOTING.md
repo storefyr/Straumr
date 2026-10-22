@@ -382,3 +382,13 @@ Bruger installerede v1.9.0 (matchet Admirality pattern) men widget vises STADIG 
 - Tilføjet `--no-restart` flag hvis man vil springe over
 - Standard-version opdateret til 1.9.1
 - Hvis lipstick-genstart fejler, får brugeren besked om at køre den manuelt
+
+---
+
+### H42: pkcon godkendelses-popup fejlede (2026-10-22)
+- Bruger fik "Fatal fejl: Failed to obtain authentication"
+- Årsag: pkcon's popup-dialog til sikkerhedskode dukkede ikke op / blev ikke besvaret
+  når skriptet kørte i baggrunden via curl-pipeline
+- Fix: pkcon install-local køres nu med bedre instruktioner og baggrundshåndtering
+- Hvis det stadig fejler: kør manuelt `pkcon install-local /tmp/harbour-straumr-*.rpm`
+  så kommer popup'en garanteret frem
